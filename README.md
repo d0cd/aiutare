@@ -3,7 +3,6 @@ Automated Analysis, Regression, and Evaluation
 
 ```
 ./prepare.sh
-cd bin
-python3 bench.py
-python3 analyze.py
+python3 bin/bench.py
+python3 bin/analyze.py
 ```

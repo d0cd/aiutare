@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-RESULTS = "../results/*.csv" 
-IMAGE_DIR = "../images"
-NUM_SOLVERS = 5
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -11,19 +7,26 @@ import time
 import glob
 import os
 
+### CONSTANTS
+
+RESULTS    = "results/*.csv" 
+IMAGE_DIR  = "images"
+
+
 ### PLOTING HELPERS
 
 def scatterplot(ax, x_data, y_data, label):
     # Plot the data, set the size (s), color and transparency (alpha) of the points
     ax.scatter(x_data, y_data, s = 10, alpha = 0.75, label = label)
 
+
 def groupedbarplot(ax, x_data, y_data_list, y_data_names):
     # Total width for all bars at one x location
     total_width = 0.8
     # Width of each individual bar
-    ind_width = total_width / len(y_data_list)
+    ind_width   = total_width / len(y_data_list)
     # This centers each cluster of bars about the x tick mark
-    alteration = np.arange(-(total_width/2), total_width/2, ind_width)
+    alteration  = np.arange(-(total_width/2), total_width/2, ind_width)
 
     # Draw bars, one category at a time
     for i in range(0, len(y_data_list)):
@@ -60,6 +63,7 @@ def plot_cactus(data, name, show_date=False, yscale_log=True, out_type="pdf"):
     ax.legend()
     fig.savefig("%s/%s"%(IMAGE_DIR, "%s.%s" % (name, out_type)), bbox_inches='tight')
     plt.close(fig)
+
 
 def plot_times(data, name, average=True, include_overall=False, show_date=False, out_type="pdf"):
     y_label = "Average Time (s)" if average else "Time (s)"
@@ -247,6 +251,7 @@ def main():
     plot_cactus(data, "overall_cactus")
     plot_counts(data, "overall_counts")
     plot_times(data, "overall_times")
-    
+
+
 if __name__ == '__main__':
     main()

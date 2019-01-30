@@ -1,17 +1,40 @@
 #!/bin/bash
 
-mkdir images
-mkdir results
-mkdir instances
-cd instances
-mkdir random
+if [ ! -d "tools" ]; then
+   mkdir tools
+fi
+
+if [ ! -d "images" ]; then
+   mkdir images
+fi
+
+if [ ! -d "results" ]; then
+   mkdir results
+fi
+
+if [ ! -d "instances" ]; then
+   mkdir instances
+fi
+
+git clone https://github.com/dblotsky/stringfuzz.git bin/stringfuzz
+pushd bin/stringfuzz
+git checkout random_word_eq
+popd
+
+if [ ! -d "instances/random" ]; then
+   mkdir instances/random
+fi
+
 for i in {5..10}
 do
    for j in {1..10}
    do
-      stringfuzzg -r random-ast -w -m -n $(( ( RANDOM % 5 ) + 1 )) -d $(( ( RANDOM % $i ) + 1 )) -v $(( ( RANDOM % $i ) + 1 )) -t $(( ( RANDOM % $i ) + 1 )) -l $(( ( RANDOM % $i ) + 1 )) -x $(( ( RANDOM % $i ) + 1 )) > random/$i-$j.smt2
+      bin/stringfuzz/bin/stringfuzzg -r random-ast -w -m -n $(( ( RANDOM % 5 ) + 1 )) -d $(( ( RANDOM % $i ) + 1 )) -v $(( ( RANDOM % $i ) + 1 )) -t $(( ( RANDOM % $i ) + 1 )) -l $(( ( RANDOM % $i ) + 1 )) -x $(( ( RANDOM % $i ) + 1 )) > instances/random/$i-$j.smt2
    done
 done
 
-wget -O bin/cvc4 "http://cvc4.cs.stanford.edu/downloads/builds/x86_64-linux-opt/cvc4-1.6-x86_64-linux-opt"
-chmod 755 bin/cvc4
+bin/install_scripts/cvc4.sh
+bin/install_scripts/z3.sh
+
+pip3 install matplotlib
+pip3 install numpy

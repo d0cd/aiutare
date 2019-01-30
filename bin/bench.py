@@ -13,25 +13,25 @@ from operator import attrgetter
 
 # arguments
 TIMEOUT     = 30.0
-PROBLEMS    = "../instances/**/*.smt2*"
-RESULTS_DIR = "../results"
+PROBLEMS    = "instances/**/*.smt2*"
+RESULTS_DIR = "results"
 
 # data
 CSV_HEADER  = "Instance,Result,Time\n"
-Result = namedtuple('Result', ('problem', 'result', 'elapsed'))
+Result      = namedtuple('Result', ('problem', 'result', 'elapsed'))
 
 # constants
-SAT_RESULT = 'sat'
-UNSAT_RESULT = 'unsat'
+SAT_RESULT     = 'sat'
+UNSAT_RESULT   = 'unsat'
 UNKNOWN_RESULT = 'unknown'
 TIMEOUT_RESULT = 'timeout (%.1f s)' % TIMEOUT
-ERROR_RESULT = 'error'
+ERROR_RESULT   = 'error'
 
 SOLVERS = {
     #timeout is a little more than TIMEOUT
-    # "Z3seq"   : "z3 smt.string_solver=seq -T:33",
-    "Z3str3"  : "z3 smt.str.multiset_check=false  smt.str.count_abstraction=true smt.string_solver=z3str3 -T:33",
-    # "CVC4"    : "./cvc4 --lang smt --strings-exp --tlimit=33000 -q",
+    "Z3seq"   : "tools/z3 smt.string_solver=seq -T:33",
+    "Z3str3"  : "tools/z3 smt.str.multiset_check=false  smt.str.count_abstraction=true smt.string_solver=z3str3 -T:33",
+    "CVC4"    : "tools/cvc4 --lang smt --strings-exp --tlimit=33000 -q",
 }
 
 def output2result(problem, output):
@@ -46,6 +46,7 @@ def output2result(problem, output):
 
     # print(problem, ': Couldn\'t parse output', file=sys.stderr)
     return ERROR_RESULT
+
 
 def run_problem(solver, invocation, problem):
     # pass the problem to the command
@@ -88,17 +89,19 @@ def run_problem(solver, invocation, problem):
     )
     return result
 
-def run_solver(args):
-    solver = args[0]
-    command = args[1]
-    problems = args[2]
 
+def run_solver(args):
+    solver   = args[0]
+    command  = args[1]
+    problems = args[2]
     filename = "%s/%s.csv" % (RESULTS_DIR, solver)
+
     with open(filename, 'w+', buffering=1) as fp:
         fp.write(CSV_HEADER)
         for problem in problems:
             result = run_problem(solver, command, problem)
             fp.write("%s,%s,%s\n" % (result.problem, result.result, result.elapsed))
+
 
 def signal_handler(signal, frame):
     print("KILLING!")
@@ -107,10 +110,12 @@ def signal_handler(signal, frame):
     except SystemExit:
         os._exit(0)
 
+
 def main():
     signal.signal(signal.SIGTERM, signal_handler)
     problems = glob.glob(PROBLEMS, recursive=True)
     print(len(problems))
+    
     args = [[solver, command, problems] for solver, command in SOLVERS.items()]
     try:
         with concurrent.futures.ProcessPoolExecutor() as executor:

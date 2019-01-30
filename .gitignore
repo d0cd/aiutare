@@ -4,3 +4,6 @@ instances
 cvc4
 .z3-trace
 results
+z3
+tools
+stringfuzz
