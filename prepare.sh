@@ -18,10 +18,14 @@ if [ ! -d "instances" ]; then
    mkdir instances
 fi
 
-for lib_call_depth in {5..40..5}
+for client_depth in {5..20..5}
 do
-   for iteration in {1..10}
-   do
-      stringfuzzg -r clever --client-depth 50 --clever-depth $lib_call_depth > instances/clever-$client_depth-$lib_call_depth-$iteration.smt2
+   lib_depth=$(expr 25 - $client_depth)
+   for (( lib_call_depth = 3; lib_call_depth < $client_depth; lib_call_depth = lib_call_depth + 3 ))
+   do 
+      for iteration in {1..5}
+      do
+         stringfuzzg -r clever --client-depth $client_depth --lib-depth $lib_depth --clever-depth $lib_call_depth > instances/clever-$client_depth-$lib_call_depth-$iteration.smt2
+      done
    done
 done

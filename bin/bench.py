@@ -30,6 +30,8 @@ ERROR_RESULT   = 'error'
 SOLVERS = {
     #timeout is a little more than TIMEOUT
     "Z3"   : "z3 -T:33",
+    # "Z3bs" : "z3 sat.burst_search=10 -T:33",
+    # "Z3fc" : "z3 sat.force_cleanup=true -T:33",
     "CVC4" : "tools/cvc4 --tlimit=33000 -q",
 }
 
