@@ -17,7 +17,7 @@ PROBLEMS    = "instances/**/*.smt2*"
 RESULTS_DIR = "results"
 
 # data
-CSV_HEADER  = "Instance,Result,Time\n"
+CSV_HEADER  = "Instance,Result,Time,"
 Result      = namedtuple('Result', ('problem', 'result', 'elapsed'))
 
 # constants
@@ -29,10 +29,26 @@ ERROR_RESULT   = 'error'
 
 SOLVERS = {
     #timeout is a little more than TIMEOUT
-    # "Z3seq"   : "tools/z3 smt.string_solver=seq -T:33",
-    "Z3str3"  : "tools/z3 smt.str.multiset_check=false  smt.str.count_abstraction=true smt.string_solver=z3str3 -T:33",
-    # "CVC4"    : "tools/cvc4 --lang smt --strings-exp --tlimit=33000 -q",
+    "Z3"   : "z3 -T:33",
+    "CVC4" : "tools/cvc4 --tlimit=33000 -q",
 }
+
+def read_stats(problem):
+    with open(problem) as f:
+        stats = []
+        header = []
+        collecting = False
+        for line in f:
+            if line.startswith(";BEGIN STRINGFUZZ STATS"):
+                collecting = True
+                continue
+            if line.startswith(";END STRINGFUZZ STATS"):
+                collecting = False
+                return header, stats
+            if collecting:
+                stats.append(line.split(" ")[-1].rstrip())
+                header.append(line.split(" ")[-2])
+    return header, stats
 
 def output2result(problem, output):
     # it's important to check for unsat first, since sat
@@ -81,9 +97,10 @@ def run_problem(solver, invocation, problem):
         stdout = process.stdout.read().decode("utf-8", "ignore")
         stderr = process.stderr.read().decode("utf-8", "ignore")
         output = output2result(problem, stdout + stderr)
+
     # make result
     result = Result(
-        problem  = problem.split("/", 2)[2],
+        problem  = problem.split("/", 2)[1],
         result   = output,
         elapsed  = elapsed
     )
@@ -95,12 +112,18 @@ def run_solver(args):
     command  = args[1]
     problems = args[2]
     filename = "%s/%s.csv" % (RESULTS_DIR, solver)
+    
+    header, _ = read_stats(problems[0])
 
     with open(filename, 'w+', buffering=1) as fp:
-        fp.write(CSV_HEADER)
+        fp.write(CSV_HEADER+",".join(header)+"\n")
+        new_header = None
         for problem in problems:
             result = run_problem(solver, command, problem)
-            fp.write("%s,%s,%s\n" % (result.problem, result.result, result.elapsed))
+            new_header, stats = read_stats(problem)
+            fp.write("%s,%s,%s,%s\n" % (result.problem, result.result, result.elapsed, ",".join(stats)))
+            if header != new_header:
+                print("HEADER MISMATCH")
 
 
 def signal_handler(signal, frame):

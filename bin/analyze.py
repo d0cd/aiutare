@@ -5,6 +5,7 @@ import numpy as np
 
 import time
 import glob
+import sys
 import os
 
 ### CONSTANTS
@@ -57,8 +58,48 @@ def plot_cactus(data, name, show_date=False, yscale_log=True, out_type="pdf"):
     ax.set_ylabel(y_label)
 
     for solver, runs in data.items():
-        flt = [r[-1] for r in runs if r[1] in ['sat', 'unsat']]
+        flt = [runs["Time"][i] for i in range(len(runs)) if runs["Result"][i] in ['sat', 'unsat']]
         scatterplot(ax, list(range(len(flt))), sorted(flt), solver)
+
+    ax.legend()
+    fig.savefig("%s/%s"%(IMAGE_DIR, "%s.%s" % (name, out_type)), bbox_inches='tight')
+    plt.close(fig)
+
+def plot_custom(data, name, x, y, average=False, show_date=False, yscale_log=True, out_type="pdf"):
+    x_label = str(x)
+    y_label = str(y)+" (average)" if average else str(y)
+    title   = "Custom: %s" % " vs. ".join(solver for solver in data.keys())
+
+    if show_date:
+        title += " (%s)" % time.strftime("%d/%m/%Y")
+    
+    # Create the plot object
+    fig, ax = plt.subplots()
+
+    if yscale_log == True:
+        ax.set_yscale('log')
+
+    # Label the axes and provide a title
+    ax.set_title(title)
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+
+    for solver, runs in data.items():
+        flt_x = [runs[x][i] for i in range(len(runs)) if runs["Result"][i] in ['sat', 'unsat']]
+        flt_y = [runs[y][i] for i in range(len(runs)) if runs["Result"][i] in ['sat', 'unsat']]
+
+        if average:
+            vals = {}
+            for i in range(len(flt_x)):
+                if not flt_x[i] in vals:
+                    vals[flt_x[i]] = [flt_y[i]]
+                else:
+                    vals[flt_x[i]].append(flt_y[i])
+            x_vals = vals.keys()
+            y_vals = [sum(vals[x])/len(vals[x]) for x in x_vals]
+            scatterplot(ax, x_vals, y_vals, solver)
+        else:
+            scatterplot(ax, flt_x, flt_y, solver)
 
     ax.legend()
     fig.savefig("%s/%s"%(IMAGE_DIR, "%s.%s" % (name, out_type)), bbox_inches='tight')
@@ -239,19 +280,22 @@ def print_times(average, choices, solvers, times):
 
 #### ENTRY POINT
 
-def main():
+def main(custom):
     data         = {}
     result_files = glob.glob(RESULTS)
 
     for result in result_files:
         solver       = os.path.basename(result)[:-len(".csv")]
-        data[solver] = np.genfromtxt(result, delimiter=',', dtype=None, encoding=None, names=["Instance", "Result", "Time"], skip_header=1)
+        data[solver] = np.genfromtxt(result, delimiter=',', dtype=None, encoding=None, names=True)
     
     check_consensus(data)
     plot_cactus(data, "overall_cactus")
     plot_counts(data, "overall_counts")
     plot_times(data, "overall_times")
 
+    if not custom == []:
+        plot_custom(data=data, average=True, x=custom[0], y=custom[1], name="custom_"+custom[0]+"_"+custom[1])
+
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
