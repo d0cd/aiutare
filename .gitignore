@@ -1,6 +1,5 @@
 .vscode
 images
-instances
 cvc4
 .z3-trace
 results

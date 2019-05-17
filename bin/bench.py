@@ -13,7 +13,7 @@ from operator import attrgetter
 
 # arguments
 TIMEOUT     = 30.0
-PROBLEMS    = "instances/**/*.smt2*"
+PROBLEMS    = "instances/benchmark/**/*.smt2*"
 RESULTS_DIR = "results"
 
 # data
@@ -29,9 +29,14 @@ ERROR_RESULT   = 'error'
 
 SOLVERS = {
     #timeout is a little more than TIMEOUT
-    # "Z3seq"   : "tools/z3 smt.string_solver=seq -T:33",
-    "Z3str3"  : "tools/z3 smt.str.multiset_check=false  smt.str.count_abstraction=true smt.string_solver=z3str3 -T:33",
     # "CVC4"    : "tools/cvc4 --lang smt --strings-exp --tlimit=33000 -q",
+
+    "Z3 CUSTOM" : "tools/z3 smt.string_solver=z3str3 -T:33",
+    "Z3control1" : "tools/z3 -T:33", # stock z3 calls to measure innate differences in runtime
+    "Z3control2" : "tools/z3 -T:33",
+    "Z3control3" : "tools/z3 -T:33",
+    # "Z3control4" : "tools/z3 -T:33",
+    # "Z3control5" : "tools/z3 -T:33",
 }
 
 def output2result(problem, output):
@@ -115,6 +120,10 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
     problems = glob.glob(PROBLEMS, recursive=True)
     print(len(problems))
+
+    # Need to delete old result files to maintain consistency with current SOLVERS
+    for filePath in glob.glob("%s/*.csv" % (RESULTS_DIR)):
+        os.remove(filePath)
     
     args = [[solver, command, problems] for solver, command in SOLVERS.items()]
     try:
