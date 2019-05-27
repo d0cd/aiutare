@@ -1,10 +1,15 @@
 # AIUTARE
 Automated Analysis, Regression, and Evaluation
 
+### Setup
+- To install SAT and/or SMT solvers (default is both):
 ```
-./prepare.sh
-python3 bin/bench.py
-python3 bin/analyze.py
+./prepare.sh [-sat] [-smt]
 ```
+- To download benchmarks... [TODO]
 
-Link to LaTeX writeup: https://www.overleaf.com/8648854938hrzkrthcwdxv
+### Usage
+```
+python3 bin/bench.py [-sat] [-smt]
+python3 bin/analyze.py [-sat] [-smt]
+```
