@@ -5,127 +5,111 @@ import glob
 import subprocess
 import signal
 import datetime
-import time
 import concurrent.futures
+import importlib
 
 from collections import namedtuple
-from operator import attrgetter
-
-# arguments
-TIMEOUT     = 30.0
-PROBLEMS    = "instances/benchmark/**/*.smt2*"
-RESULTS_DIR = "results"
+from pathlib import Path
 
 # data
-CSV_HEADER  = "Instance,Result,Time\n"
-Result      = namedtuple('Result', ('problem', 'result', 'elapsed'))
+CSV_HEADER = "Instance,Result,Time\n"
+RESULT = namedtuple('Result', ('problem', 'result', 'elapsed'))
 
 # constants
-SAT_RESULT     = 'sat'
-UNSAT_RESULT   = 'unsat'
-UNKNOWN_RESULT = 'unknown'
-TIMEOUT_RESULT = 'timeout (%.1f s)' % TIMEOUT
-ERROR_RESULT   = 'error'
-
-SOLVERS = {
-    #timeout is a little more than TIMEOUT
-    # "CVC4"    : "tools/cvc4 --lang smt --strings-exp --tlimit=33000 -q",
-
-    "Z3 CUSTOM" : "tools/z3 smt.string_solver=z3str3 -T:33",
-    "Z3control1" : "tools/z3 -T:33", # stock z3 calls to measure innate differences in runtime
-    "Z3control2" : "tools/z3 -T:33",
-    "Z3control3" : "tools/z3 -T:33",
-    # "Z3control4" : "tools/z3 -T:33",
-    # "Z3control5" : "tools/z3 -T:33",
-}
-
-def output2result(problem, output):
-    # it's important to check for unsat first, since sat
-    # is a substring of unsat
-    if 'UNSAT' in output or 'unsat' in output:
-        return UNSAT_RESULT
-    if 'SAT' in output or 'sat' in output:
-        return SAT_RESULT
-    if 'UNKNOWN' in output or 'unknown' in output:
-        return UNKNOWN_RESULT
-
-    # print(problem, ': Couldn\'t parse output', file=sys.stderr)
-    return ERROR_RESULT
+ERROR_RESULT = 'error'
 
 
-def run_problem(solver, invocation, problem):
+def run_problem(command, timeout, problem):
     # pass the problem to the command
-    command = "%s %s" %(invocation, problem)
+    invocation = "%s %s" % (command, problem)
     # get start time
     start = datetime.datetime.now().timestamp()
     # run command
     process = subprocess.Popen(
-        command,
-        shell      = True,
-        stdout     = subprocess.PIPE,
-        stderr     = subprocess.PIPE,
-        preexec_fn = os.setsid
+        invocation,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        preexec_fn=os.setsid
     )
     # wait for it to complete
     try:
-        process.wait(timeout=TIMEOUT)
+        process.wait(timeout=timeout)
     # if it times out ...
     except subprocess.TimeoutExpired:
         # kill it
-        print('TIMED OUT:', repr(command), '... killing', process.pid, file=sys.stderr)
+        print('TIMED OUT:', repr(invocation), '... killing', process.pid, file=sys.stderr)
         os.killpg(os.getpgid(process.pid), signal.SIGINT)
         # set timeout result
-        elapsed = TIMEOUT
-        output  = TIMEOUT_RESULT
+        elapsed = timeout
+        output = 'timeout (%.1f s)' % timeout
     # if it completes in time ...
     else:
         # measure run time
-        end     = datetime.datetime.now().timestamp()
+        end = datetime.datetime.now().timestamp()
         elapsed = end - start
         # get result
         stdout = process.stdout.read().decode("utf-8", "ignore")
         stderr = process.stderr.read().decode("utf-8", "ignore")
-        output = output2result(problem, stdout + stderr)
+        output = CATEGORY.output2result(problem, stdout + stderr)
     # make result
-    result = Result(
-        problem  = problem.split("/", 2)[2],
-        result   = output,
-        elapsed  = elapsed
+    result = RESULT(
+        problem=problem.split("/", 2)[2],
+        result=output,
+        elapsed=elapsed
     )
     return result
 
 
 def run_solver(args):
-    solver   = args[0]
-    command  = args[1]
-    problems = args[2]
-    filename = "%s/%s.csv" % (RESULTS_DIR, solver)
+    solver = args[0]
+    command = args[1]
+    timeout = args[2]
+    problems = args[3]
+    filename = "%s/%s.csv" % (CATEGORY.RESULTS_DIR, solver)
 
     with open(filename, 'w+', buffering=1) as fp:
         fp.write(CSV_HEADER)
         for problem in problems:
-            result = run_problem(solver, command, problem)
+            result = run_problem(command, timeout, problem)
             fp.write("%s,%s,%s\n" % (result.problem, result.result, result.elapsed))
 
 
-def signal_handler(signal, frame):
+def signal_handler():
     print("KILLING!")
     try:
         sys.exit(0)
     except SystemExit:
-        os._exit(0)
+        exit(0)
+
+
+# TODO: eventually handle JSON reading to set SOLVERS here
+def import_category():
+    if len(sys.argv) != 2:
+        print("Invalid Input. Usage:  python3 bench.py [category, e.g. sat]")
+        exit(1)
+
+    category_file = "/categories/%s.py" % sys.argv[1]
+    if Path(category_file).is_file():
+        global CATEGORY
+        CATEGORY = importlib.import_module(category_file)
+    else:
+        print("File at %s not found" % category_file)
+        exit(1)
 
 
 def main():
+    import_category()
+
     signal.signal(signal.SIGTERM, signal_handler)
-    problems = glob.glob(PROBLEMS, recursive=True)
+    problems = glob.glob(CATEGORY.PROBLEMS, recursive=True)
     print(len(problems))
 
-    # Need to delete old result files to maintain consistency with current SOLVERS
-    for filePath in glob.glob("%s/*.csv" % (RESULTS_DIR)):
+    # Need to delete old result files to maintain consistency with currently specified solvers
+    for filePath in glob.glob("%s/*.csv" % CATEGORY.RESULTS_DIR):
         os.remove(filePath)
-    
-    args = [[solver, command, problems] for solver, command in SOLVERS.items()]
+
+    args = [[solver, command[0], command[1], problems] for solver, command in CATEGORY.SOLVERS.items()]
     try:
         with concurrent.futures.ProcessPoolExecutor() as executor:
             executor.map(run_solver, args)
@@ -134,7 +118,7 @@ def main():
         try:
             sys.exit(0)
         except SystemExit:
-            os._exit(0)
+            exit(0)
 
 
 if __name__ == '__main__':

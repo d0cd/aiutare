@@ -9,30 +9,30 @@ import os
 
 ### CONSTANTS
 
-RESULTS    = "results/*.csv" 
-IMAGE_DIR  = "images"
+RESULTS = "results/*.csv"
+IMAGE_DIR = "images"
 
 
 ### PLOTING HELPERS
 
 def scatterplot(ax, x_data, y_data, label):
     # Plot the data, set the size (s), color and transparency (alpha) of the points
-    ax.scatter(x_data, y_data, s = 10, alpha = 0.75, label = label)
+    ax.scatter(x_data, y_data, s=10, alpha=0.75, label=label)
 
 
 def groupedbarplot(ax, x_data, y_data_list, y_data_names):
     # Total width for all bars at one x location
     total_width = 0.8
     # Width of each individual bar
-    ind_width   = total_width / len(y_data_list)
+    ind_width = total_width / len(y_data_list)
     # This centers each cluster of bars about the x tick mark
-    alteration  = np.arange(-(total_width/2), total_width/2, ind_width)
+    alteration = np.arange(-(total_width / 2), total_width / 2, ind_width)
 
     # Draw bars, one category at a time
     for i in range(0, len(y_data_list)):
         # Move the bar to the right on the x-axis so it doesn't
         # overlap with previously drawn ones
-        ax.bar(x_data + alteration[i], y_data_list[i], label = y_data_names[i], width = ind_width)
+        ax.bar(x_data + alteration[i], y_data_list[i], label=y_data_names[i], width=ind_width)
 
 
 ### PLOTTING FUNCTIONS
@@ -40,11 +40,11 @@ def groupedbarplot(ax, x_data, y_data_list, y_data_names):
 def plot_cactus(data, name, show_date=False, yscale_log=True, out_type="pdf"):
     x_label = "Instance #"
     y_label = "Time (s)"
-    title   = "Cactus: %s" % " vs. ".join(solver for solver in data.keys())
+    title = "Cactus: %s" % " vs. ".join(solver for solver in data.keys())
 
     if show_date:
         title += " (%s)" % time.strftime("%d/%m/%Y")
-    
+
     # Create the plot object
     fig, ax = plt.subplots()
 
@@ -61,29 +61,29 @@ def plot_cactus(data, name, show_date=False, yscale_log=True, out_type="pdf"):
         scatterplot(ax, list(range(len(flt))), sorted(flt), solver)
 
     ax.legend()
-    fig.savefig("%s/%s"%(IMAGE_DIR, "%s.%s" % (name, out_type)), bbox_inches='tight')
+    fig.savefig("%s/%s" % (IMAGE_DIR, "%s.%s" % (name, out_type)), bbox_inches='tight')
     plt.close(fig)
 
 
 def plot_times(data, name, average=True, include_overall=False, show_date=False, out_type="pdf"):
     y_label = "Average Time (s)" if average else "Time (s)"
-    title   = "Times: %s" % " vs. ".join(solver for solver in data.keys())
+    title = "Times: %s" % " vs. ".join(solver for solver in data.keys())
 
     if show_date:
         title += " (%s)" % time.strftime("%d/%m/%Y")
-    
+
     # Create the plot object
-    fig, ax = plt.subplots()    
+    fig, ax = plt.subplots()
 
     # Label the axes and provide a title
     ax.set_title(title)
     ax.set_ylabel(y_label)
 
-    choices     = ["sat", "unsat", "unknown", "error", "overall"]
-    choices     = choices if include_overall else choices[:-1]
-    x_data      = list(range(len(choices)))
+    choices = ["sat", "unsat", "unknown", "error", "overall"]
+    choices = choices if include_overall else choices[:-1]
+    x_data = list(range(len(choices)))
     y_data_list = []
-    solvers     = []
+    solvers = []
 
     for solver, runs in data.items():
         solvers.append(solver)
@@ -91,11 +91,11 @@ def plot_times(data, name, average=True, include_overall=False, show_date=False,
 
         if average:
             count = count_results(runs)
-            count = [count[0], count[1], count[2], count[4]] #remove timeouts
+            count = [count[0], count[1], count[2], count[4]]  # remove timeouts
             count = count + [sum(count)] if include_overall else count
 
             for i in range(len(count)):
-                times[i] = times[i]/count[i] if count[i] > 0 else 0
+                times[i] = times[i] / count[i] if count[i] > 0 else 0
 
         y_data_list.append(times if include_overall else times[:-1])
 
@@ -103,7 +103,7 @@ def plot_times(data, name, average=True, include_overall=False, show_date=False,
     ax.set_xticklabels(choices)
     ax.set_xticks(list(range(len(choices))))
     ax.legend()
-    fig.savefig("%s/%s"%(IMAGE_DIR, "%s.%s" % (name, out_type)), bbox_inches='tight')
+    fig.savefig("%s/%s" % (IMAGE_DIR, "%s.%s" % (name, out_type)), bbox_inches='tight')
     plt.close(fig)
 
     print_times(average, choices, solvers, y_data_list)
@@ -111,21 +111,21 @@ def plot_times(data, name, average=True, include_overall=False, show_date=False,
 
 def plot_counts(data, name, show_date=False, out_type="pdf"):
     y_label = "# Occurences"
-    title   = "Counts: %s" % " vs. ".join(solver for solver in data.keys())
+    title = "Counts: %s" % " vs. ".join(solver for solver in data.keys())
 
     if show_date:
         title += " (%s)" % time.strftime("%d/%m/%Y")
-    
+
     # Create the plot object
-    fig, ax = plt.subplots()    
+    fig, ax = plt.subplots()
 
     # Label the axes and provide a title
     ax.set_title(title)
     ax.set_ylabel(y_label)
 
     choices = ["sat", "unsat", "unknown", "timeout", "error"]
-    x_data  = list(range(len(choices)))
-    counts  = []
+    x_data = list(range(len(choices)))
+    counts = []
     solvers = []
 
     for solver, runs in data.items():
@@ -136,7 +136,7 @@ def plot_counts(data, name, show_date=False, out_type="pdf"):
     ax.set_xticklabels(choices)
     ax.set_xticks(list(range(len(choices))))
     ax.legend()
-    fig.savefig("%s/%s"%(IMAGE_DIR, "%s.%s" % (name, out_type)), bbox_inches='tight')
+    fig.savefig("%s/%s" % (IMAGE_DIR, "%s.%s" % (name, out_type)), bbox_inches='tight')
     plt.close(fig)
 
     print_counts(choices, solvers, counts)
@@ -183,7 +183,7 @@ def time_results(runs):
 
 def check_consensus(data):
     # ASSUMING IN SAME ORDER!!!
-    issues     = []
+    issues = []
     min_solved = min(len(runs) for solver, runs in data.items())
 
     for i in range(min_solved):
@@ -191,7 +191,7 @@ def check_consensus(data):
 
         for solver, runs in data.items():
             votes[solver] = runs["Result"][i]
-            problem       = runs['Instance'][i]
+            problem = runs['Instance'][i]
 
         done = False
         for _, va in votes.items():
@@ -240,13 +240,14 @@ def print_times(average, choices, solvers, times):
 #### ENTRY POINT
 
 def main():
-    data         = {}
+    data = {}
     result_files = glob.glob(RESULTS)
 
     for result in result_files:
-        solver       = os.path.basename(result)[:-len(".csv")]
-        data[solver] = np.genfromtxt(result, delimiter=',', dtype=None, encoding=None, names=["Instance", "Result", "Time"], skip_header=1)
-    
+        solver = os.path.basename(result)[:-len(".csv")]
+        data[solver] = np.genfromtxt(result, delimiter=',', dtype=None, encoding=None,
+                                     names=["Instance", "Result", "Time"], skip_header=1)
+
     check_consensus(data)
     plot_cactus(data, "overall_cactus")
     plot_counts(data, "overall_counts")
