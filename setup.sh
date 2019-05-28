@@ -23,13 +23,15 @@ if [[ ! -d "images" ]]; then
    mkdir images
 fi
 
+sudo apt install python3-pip
+pip3 install --upgrade pip
 pip3 install matplotlib
 pip3 install numpy
 
 
 # SAT ONLY:
 # Enabled by default, or specified with parameter "-sat"
-if [[ $# -eq 1 || $1 = "-sat" ]]; then
+if [[ $# -eq 0 || $1 = "-sat" ]]; then
 
    if [[ ! -d "instances/sat" ]]; then
       mkdir instances/sat
@@ -56,7 +58,7 @@ fi
 
 # SMT ONLY:
 # Enabled by default, or specified with parameter "-smt"
-if [[ $# -eq 1 || $1 = "-smt" ]]; then
+if [[ $# -eq 0 || $1 = "-smt" ]]; then
 
    if [[ ! -d "instances/smt" ]]; then
       mkdir instances/smt

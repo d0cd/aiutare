@@ -9,7 +9,7 @@ import concurrent.futures
 import importlib
 
 from collections import namedtuple
-from pathlib import Path
+CATEGORY = importlib.import_module(sys.argv[1])
 
 # data
 CSV_HEADER = "Instance,Result,Time\n"
@@ -89,10 +89,10 @@ def import_category():
         print("Invalid Input. Usage:  python3 bench.py [category, e.g. sat]")
         exit(1)
 
-    category_file = "/categories/%s.py" % sys.argv[1]
-    if Path(category_file).is_file():
+    category_file = "bin/%s.py" % sys.argv[1]
+    if os.path.isfile(category_file):
         global CATEGORY
-        CATEGORY = importlib.import_module(category_file)
+        CATEGORY = importlib.import_module(sys.argv[1])
     else:
         print("File at %s not found" % category_file)
         exit(1)
