@@ -6,7 +6,7 @@ import subprocess
 import signal
 import datetime
 import concurrent.futures
-import importlib
+import json
 
 from collections import namedtuple
 
@@ -14,11 +14,22 @@ from collections import namedtuple
 CSV_HEADER = "Instance,Result,Time\n"
 RESULT = namedtuple('Result', ('problem', 'result', 'elapsed'))
 
-# constants
-ERROR_RESULT = 'error'
+
+def output2result(problem, output):
+    # it's important to check for unsat first, since sat
+    # is a substring of unsat
+    if 'UNSAT' in output or 'unsat' in output:
+        return 'unsat'
+    if 'SAT' in output or 'sat' in output:
+        return 'sat'
+    if 'UNKNOWN' in output or 'unknown' in output:
+        return 'unknown'
+
+    print(problem, ': Couldn\'t parse output', file=sys.stderr)
+    return 'error'
 
 
-def run_problem(command, timeout, problem):
+def run_problem(command, problem):
     # pass the problem to the command
     invocation = "%s %s" % (command, problem)
     # get start time
@@ -33,15 +44,15 @@ def run_problem(command, timeout, problem):
     )
     # wait for it to complete
     try:
-        process.wait(timeout=timeout)
+        process.wait(timeout=TIMEOUT)
     # if it times out ...
     except subprocess.TimeoutExpired:
         # kill it
         print('TIMED OUT:', repr(invocation), '... killing', process.pid, file=sys.stderr)
         os.killpg(os.getpgid(process.pid), signal.SIGINT)
         # set timeout result
-        elapsed = timeout
-        output = 'timeout (%.1f s)' % timeout
+        elapsed = TIMEOUT
+        output = 'timeout (%.1f s)' % TIMEOUT
     # if it completes in time ...
     else:
         # measure run time
@@ -50,7 +61,7 @@ def run_problem(command, timeout, problem):
         # get result
         stdout = process.stdout.read().decode("utf-8", "ignore")
         stderr = process.stderr.read().decode("utf-8", "ignore")
-        output = CATEGORY.output2result(problem, stdout + stderr)
+        output = output2result(problem, stdout + stderr)
     # make result
     result = RESULT(
         problem=problem.split("/", 2)[2],
@@ -63,14 +74,13 @@ def run_problem(command, timeout, problem):
 def run_solver(args):
     solver = args[0]
     command = args[1]
-    timeout = args[2]
-    problems = args[3]
-    filename = "%s/%s.csv" % (CATEGORY.RESULTS_DIR, solver)
+    problems = args[2]
+    filename = "results/%s/%s.csv" % (CATEGORY, solver)
 
     with open(filename, 'w+', buffering=1) as fp:
         fp.write(CSV_HEADER)
         for problem in problems:
-            result = run_problem(command, timeout, problem)
+            result = run_problem(command, problem)
             fp.write("%s,%s,%s\n" % (result.problem, result.result, result.elapsed))
 
 
@@ -82,16 +92,26 @@ def signal_handler():
         exit(0)
 
 
-# TODO: eventually handle JSON reading to set SOLVERS here
 def import_category():
     if len(sys.argv) != 2:
         print("Invalid Input. Usage:  python3 bench.py [category, e.g. sat]")
         exit(1)
 
-    category_file = "bin/%s.py" % sys.argv[1]
+    category_file = "bin/categories/%s.json" % sys.argv[1]
     if os.path.isfile(category_file):
+
         global CATEGORY
-        CATEGORY = importlib.import_module(sys.argv[1])
+        CATEGORY = sys.argv[1]
+
+        with open(category_file) as f:
+            json_data = json.load(f)
+
+            global FILE_EXTENSION
+            FILE_EXTENSION = json_data["FILE_EXTENSION"]
+            global SOLVERS
+            SOLVERS = json_data["SOLVERS"]
+            global TIMEOUT
+            TIMEOUT = json_data["TIMEOUT"]
     else:
         print("File at %s not found" % category_file)
         exit(1)
@@ -101,14 +121,14 @@ def main():
     import_category()
 
     signal.signal(signal.SIGTERM, signal_handler)
-    problems = glob.glob(CATEGORY.PROBLEMS, recursive=True)
+    problems = glob.glob("instances/%s/**/*.%s*" % (CATEGORY, FILE_EXTENSION), recursive=True)
     print(len(problems))
 
     # Need to delete old result files to maintain consistency with currently specified solvers
-    for filePath in glob.glob("%s/*.csv" % CATEGORY.RESULTS_DIR):
+    for filePath in glob.glob("results/%s/*.csv" % CATEGORY):
         os.remove(filePath)
 
-    args = [[solver, command[0], command[1], problems] for solver, command in CATEGORY.SOLVERS.items()]
+    args = [[solver, command, problems] for solver, command in SOLVERS.items()]
     try:
         with concurrent.futures.ProcessPoolExecutor() as executor:
             executor.map(run_solver, args)

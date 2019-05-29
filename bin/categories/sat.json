@@ -1,0 +1,9 @@
+{
+  "FILE_EXTENSION": "cnf",
+  "TIMEOUT": 30.0,
+
+  "SOLVERS": {
+    "syrup": "tools/sat/syrup/syrup/bin/glucose-syrup -nthreads=8 -model -maxmemory=50000 -cpu-lim=33",
+    "minisat": "minisat -cpu-lim=33"
+  }
+}
