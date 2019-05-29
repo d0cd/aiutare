@@ -10,16 +10,15 @@ SOLVERS = {
 }
 
 
-# Cannot be handled by helpers.py due to unique output from each problem type
 def output2result(problem, output):
     # it's important to check for unsat first, since sat
     # is a substring of unsat
-    if 'UNSAT' in output or 'unsat' in output:
+    if 'UNSAT' in output or 'unsat' in output:      # Category specific
         return 'unsat'
-    if 'SAT' in output or 'sat' in output:
+    if 'SAT' in output or 'sat' in output:          # Category specific
         return 'sat'
-    if 'UNKNOWN' in output or 'unknown' in output:
+    if 'UNKNOWN' in output or 'unknown' in output:  # Category specific
         return 'unknown'
 
-    # print(problem, ': Couldn\'t parse output', file=sys.stderr)
+    print(problem, ': Couldn\'t parse output', file=sys.stderr)
     return 'error'

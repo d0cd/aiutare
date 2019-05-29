@@ -9,7 +9,6 @@ import concurrent.futures
 import importlib
 
 from collections import namedtuple
-CATEGORY = importlib.import_module(sys.argv[1])
 
 # data
 CSV_HEADER = "Instance,Result,Time\n"

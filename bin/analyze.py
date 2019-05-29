@@ -1,26 +1,22 @@
 #!/usr/bin/env python3
-
-import matplotlib.pyplot as plt
-import numpy as np
-
+import importlib
+import sys
 import time
 import glob
 import os
 
-### CONSTANTS
-
-RESULTS = "results/*.csv"
-IMAGE_DIR = "images"
+import matplotlib.pyplot as plt
+import numpy as np
 
 
-### PLOTING HELPERS
+# PLOTTING HELPERS
 
-def scatterplot(ax, x_data, y_data, label):
+def scatter_plot(ax, x_data, y_data, label):
     # Plot the data, set the size (s), color and transparency (alpha) of the points
     ax.scatter(x_data, y_data, s=10, alpha=0.75, label=label)
 
 
-def groupedbarplot(ax, x_data, y_data_list, y_data_names):
+def grouped_bar_plot(ax, x_data, y_data_list, y_data_names):
     # Total width for all bars at one x location
     total_width = 0.8
     # Width of each individual bar
@@ -35,7 +31,7 @@ def groupedbarplot(ax, x_data, y_data_list, y_data_names):
         ax.bar(x_data + alteration[i], y_data_list[i], label=y_data_names[i], width=ind_width)
 
 
-### PLOTTING FUNCTIONS
+# PLOTTING FUNCTIONS
 
 def plot_cactus(data, name, show_date=False, yscale_log=True, out_type="pdf"):
     x_label = "Instance #"
@@ -48,7 +44,7 @@ def plot_cactus(data, name, show_date=False, yscale_log=True, out_type="pdf"):
     # Create the plot object
     fig, ax = plt.subplots()
 
-    if yscale_log == True:
+    if yscale_log:
         ax.set_yscale('log')
 
     # Label the axes and provide a title
@@ -58,7 +54,7 @@ def plot_cactus(data, name, show_date=False, yscale_log=True, out_type="pdf"):
 
     for solver, runs in data.items():
         flt = [r[-1] for r in runs if r[1] in ['sat', 'unsat']]
-        scatterplot(ax, list(range(len(flt))), sorted(flt), solver)
+        scatter_plot(ax, list(range(len(flt))), sorted(flt), solver)
 
     ax.legend()
     fig.savefig("%s/%s" % (IMAGE_DIR, "%s.%s" % (name, out_type)), bbox_inches='tight')
@@ -99,7 +95,7 @@ def plot_times(data, name, average=True, include_overall=False, show_date=False,
 
         y_data_list.append(times if include_overall else times[:-1])
 
-    groupedbarplot(ax, x_data, y_data_list, solvers)
+    grouped_bar_plot(ax, x_data, y_data_list, solvers)
     ax.set_xticklabels(choices)
     ax.set_xticks(list(range(len(choices))))
     ax.legend()
@@ -132,7 +128,7 @@ def plot_counts(data, name, show_date=False, out_type="pdf"):
         solvers.append(solver)
         counts.append(count_results(runs))
 
-    groupedbarplot(ax, x_data, counts, solvers)
+    grouped_bar_plot(ax, x_data, counts, solvers)
     ax.set_xticklabels(choices)
     ax.set_xticks(list(range(len(choices))))
     ax.legend()
@@ -142,11 +138,11 @@ def plot_counts(data, name, show_date=False, out_type="pdf"):
     print_counts(choices, solvers, counts)
 
 
-### ANALYSIS AND AGGREGATION
+# ANALYSIS AND AGGREGATION
 
 def count_results(runs):
     choices = ["sat", "unsat", "unknown", "timeout", "error"]
-    results = [0 for x in choices]
+    results = [0 for _ in choices]
 
     for r in runs["Result"]:
         if r == "sat":
@@ -165,7 +161,7 @@ def count_results(runs):
 
 def time_results(runs):
     choices = ["sat", "unsat", "unknown", "error", "overall"]
-    results = [0 for x in choices]
+    results = [0 for _ in choices]
 
     for r in range(len(runs["Result"])):
         if runs["Result"][r] == "sat":
@@ -208,7 +204,7 @@ def check_consensus(data):
     print_consensus_issues(issues)
 
 
-### PRINTING RESULTS
+# PRINTING RESULTS
 
 def print_consensus_issues(issues):
     if len(issues) == 0:
@@ -237,11 +233,28 @@ def print_times(average, choices, solvers, times):
         print(", ".join(c for c in [solvers[i]] + list(map(repr, times[i]))))
 
 
-#### ENTRY POINT
+def import_category():
+    if len(sys.argv) != 2:
+        print("Invalid Input. Usage:  python3 analyze.py [category, e.g. sat]")
+        exit(1)
+
+    category_file = "bin/%s.py" % sys.argv[1]
+    if os.path.isfile(category_file):
+        global CATEGORY
+        CATEGORY = importlib.import_module(sys.argv[1])
+        global IMAGE_DIR
+        IMAGE_DIR = "images/" + sys.argv[1]
+    else:
+        print("File at %s not found" % category_file)
+        exit(1)
+
+
+# ENTRY POINT
 
 def main():
+    import_category()
     data = {}
-    result_files = glob.glob(RESULTS)
+    result_files = glob.glob(CATEGORY.RESULTS_DIR + "/*.csv")
 
     for result in result_files:
         solver = os.path.basename(result)[:-len(".csv")]
