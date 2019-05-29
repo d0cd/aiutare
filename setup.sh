@@ -23,6 +23,11 @@ if [[ ! -d "images" ]]; then
    mkdir images
 fi
 
+# "categories" contains JSON files for selected problem categories
+if [[ ! -d "bin/categories" ]]; then
+   mkdir bin/categories
+fi
+
 sudo apt install python3-pip
 pip3 install --upgrade pip
 pip3 install matplotlib
@@ -49,7 +54,8 @@ if [[ $# -eq 0 || $1 = "-sat" ]]; then
       mkdir images/sat
    fi
 
-   # comment out any unneeded tools below:
+   cp bin/install_scripts/sat/sat.json bin/categories
+
    bin/install_scripts/sat/minisat.sh
    bin/install_scripts/sat/syrup.sh
 
@@ -76,10 +82,13 @@ if [[ $# -eq 0 || $1 = "-smt" ]]; then
       mkdir images/smt
    fi
 
-   # comment out any unneeded tools below:
+   cp bin/install_scripts/smt/smt.json bin/categories
+
    bin/install_scripts/smt/cvc4.sh
    bin/install_scripts/smt/z3.sh
 
+
+   # Fuzz some SMT problems for testing
    git clone https://github.com/dblotsky/stringfuzz.git bin/stringfuzz
    pushd bin/stringfuzz
    git checkout random_word_eq
