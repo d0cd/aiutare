@@ -3,7 +3,8 @@
   "TIMEOUT": 30.0,
 
   "SOLVERS": {
-    "syrup": "tools/sat/syrup/syrup/bin/glucose-syrup -nthreads=8 -model -maxmemory=50000 -cpu-lim=33",
-    "minisat": "minisat -cpu-lim=33"
+    "syrup":    "tools/sat/syrup/syrup/bin/glucose-syrup -nthreads=8 -model -maxmemory=50000 -cpu-lim=33",
+    "minisat":  "minisat -cpu-lim=33",
+    "maple":    "tools/sat/maple/MapleLRB_LCMoccRestart/sources/simp/glucose_static -cpu-lim=33"
   }
 }

@@ -8,5 +8,3 @@ cd syrup/syrup
 make
 cd ../..
 rm syrup_zipped
-
-# TODO: write to correct "solvers" JSON file with command to run

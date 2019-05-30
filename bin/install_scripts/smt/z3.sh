@@ -17,5 +17,3 @@ popd
 popd
 
 cp tools/smt/z3_src/build/z3 tools/smt/z3
-
-# TODO: write to correct "solvers" JSON file with command to run
