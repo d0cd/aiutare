@@ -54,7 +54,7 @@ if [[ $# -eq 0 || $1 = "-sat" ]]; then
       mkdir images/sat
    fi
 
-   cp bin/install_scripts/sat/sat.json bin/categories
+   cp bin/install_scripts/sat/sat.py bin/categories
 
    bin/install_scripts/sat/minisat.sh
    bin/install_scripts/sat/syrup.sh
@@ -82,7 +82,7 @@ if [[ $# -eq 0 || $1 = "-smt" ]]; then
       mkdir images/smt
    fi
 
-   cp bin/install_scripts/smt/smt.json bin/categories
+   cp bin/install_scripts/smt/smt.py bin/categories
 
    bin/install_scripts/smt/cvc4.sh
    bin/install_scripts/smt/z3.sh

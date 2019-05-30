@@ -6,7 +6,8 @@ import subprocess
 import signal
 import datetime
 import concurrent.futures
-import json
+import importlib
+from importlib import util
 
 from collections import namedtuple
 
@@ -44,15 +45,15 @@ def run_problem(command, problem):
     )
     # wait for it to complete
     try:
-        process.wait(timeout=TIMEOUT)
+        process.wait(timeout=CATEGORY.TIMEOUT)
     # if it times out ...
     except subprocess.TimeoutExpired:
         # kill it
         print('TIMED OUT:', repr(invocation), '... killing', process.pid, file=sys.stderr)
         os.killpg(os.getpgid(process.pid), signal.SIGINT)
         # set timeout result
-        elapsed = TIMEOUT
-        output = 'timeout (%.1f s)' % TIMEOUT
+        elapsed = CATEGORY.TIMEOUT
+        output = 'timeout (%.1f s)' % CATEGORY.TIMEOUT
     # if it completes in time ...
     else:
         # measure run time
@@ -75,7 +76,7 @@ def run_solver(args):
     solver = args[0]
     command = args[1]
     problems = args[2]
-    filename = "results/%s/%s.csv" % (CATEGORY, solver)
+    filename = "results/%s/%s.csv" % (CATEGORY_NAME, solver)
 
     with open(filename, 'w+', buffering=1) as fp:
         fp.write(CSV_HEADER)
@@ -97,21 +98,17 @@ def import_category():
         print("Invalid Input. Usage:  python3 bench.py [category, e.g. sat]")
         exit(1)
 
-    category_file = "bin/categories/%s.json" % sys.argv[1]
+    category_file = "bin/categories/%s.py" % sys.argv[1]
     if os.path.isfile(category_file):
 
+        global CATEGORY_NAME
+        CATEGORY_NAME = sys.argv[1]
+
         global CATEGORY
-        CATEGORY = sys.argv[1]
+        spec = importlib.util.spec_from_file_location(CATEGORY_NAME, category_file)
+        CATEGORY = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(CATEGORY)
 
-        with open(category_file) as f:
-            json_data = json.load(f)
-
-            global FILE_EXTENSION
-            FILE_EXTENSION = json_data["FILE_EXTENSION"]
-            global SOLVERS
-            SOLVERS = json_data["SOLVERS"]
-            global TIMEOUT
-            TIMEOUT = json_data["TIMEOUT"]
     else:
         print("File at %s not found" % category_file)
         exit(1)
@@ -121,14 +118,14 @@ def main():
     import_category()
 
     signal.signal(signal.SIGTERM, signal_handler)
-    problems = glob.glob("instances/%s/**/*.%s*" % (CATEGORY, FILE_EXTENSION), recursive=True)
+    problems = glob.glob("instances/%s/**/*.%s*" % (CATEGORY_NAME, CATEGORY.FILE_EXTENSION), recursive=True)
     print(len(problems))
 
     # Need to delete old result files to maintain consistency with currently specified solvers
-    for filePath in glob.glob("results/%s/*.csv" % CATEGORY):
+    for filePath in glob.glob("results/%s/*.csv" % CATEGORY_NAME):
         os.remove(filePath)
 
-    args = [[solver, command, problems] for solver, command in SOLVERS.items()]
+    args = [[solver, command, problems] for solver, command in CATEGORY.SOLVERS.items()]
     try:
         with concurrent.futures.ProcessPoolExecutor() as executor:
             executor.map(run_solver, args)

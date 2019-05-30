@@ -57,7 +57,7 @@ def plot_cactus(data, name, show_date=False, yscale_log=True, out_type="pdf"):
         scatter_plot(ax, list(range(len(flt))), sorted(flt), solver)
 
     ax.legend()
-    fig.savefig("%s/%s" % ("images/" + CATEGORY, "%s.%s" % (name, out_type)), bbox_inches='tight')
+    fig.savefig("%s/%s" % ("images/" + CATEGORY_NAME, "%s.%s" % (name, out_type)), bbox_inches='tight')
     plt.close(fig)
 
 
@@ -99,7 +99,7 @@ def plot_times(data, name, average=True, include_overall=False, show_date=False,
     ax.set_xticklabels(choices)
     ax.set_xticks(list(range(len(choices))))
     ax.legend()
-    fig.savefig("%s/%s" % ("images/" + CATEGORY, "%s.%s" % (name, out_type)), bbox_inches='tight')
+    fig.savefig("%s/%s" % ("images/" + CATEGORY_NAME, "%s.%s" % (name, out_type)), bbox_inches='tight')
     plt.close(fig)
 
     print_times(average, choices, solvers, y_data_list)
@@ -132,7 +132,7 @@ def plot_counts(data, name, show_date=False, out_type="pdf"):
     ax.set_xticklabels(choices)
     ax.set_xticks(list(range(len(choices))))
     ax.legend()
-    fig.savefig("%s/%s" % ("images/" + CATEGORY, "%s.%s" % (name, out_type)), bbox_inches='tight')
+    fig.savefig("%s/%s" % ("images/" + CATEGORY_NAME, "%s.%s" % (name, out_type)), bbox_inches='tight')
     plt.close(fig)
 
     print_counts(choices, solvers, counts)
@@ -238,10 +238,10 @@ def import_category():
         print("Invalid Input. Usage:  python3 analyze.py [category, e.g. sat]")
         exit(1)
 
-    category_file = "bin/categories/%s.json" % sys.argv[1]
+    category_file = "bin/categories/%s.py" % sys.argv[1]
     if os.path.isfile(category_file):
-        global CATEGORY
-        CATEGORY = sys.argv[1]
+        global CATEGORY_NAME
+        CATEGORY_NAME = sys.argv[1]
     else:
         print("File at %s not found" % category_file)
         exit(1)
@@ -252,7 +252,7 @@ def import_category():
 def main():
     import_category()
     data = {}
-    result_files = glob.glob("results/%s/*.csv" % CATEGORY)
+    result_files = glob.glob("results/%s/*.csv" % CATEGORY_NAME)
 
     for result in result_files:
         solver = os.path.basename(result)[:-len(".csv")]
