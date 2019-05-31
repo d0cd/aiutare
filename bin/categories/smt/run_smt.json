@@ -1,0 +1,10 @@
+{
+    "FILE_EXTENSION" : "smt2",
+    "TIMEOUT" : 30.0,
+
+    "SOLVERS" :
+    {
+        "CVC4": "tools/smt/cvc4 --lang smt --strings-exp --tlimit=33000 -q",
+        "Z3":   "tools/smt/z3 -T:33"
+    }
+}

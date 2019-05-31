@@ -1,10 +1,8 @@
 .vscode
-images
-cvc4
-.z3-trace
-results
-z3
-tools
-stringfuzz
 .idea
+images
+results
+tools
 instances
+stringfuzz
+.z3-trace

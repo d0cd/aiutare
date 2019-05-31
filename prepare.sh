@@ -1,31 +1,26 @@
 #!/bin/bash
 
 # GENERAL:
-# Needed for either SAT or SMT
+# Needed for all categories
 
-# "instances" contains benchmarks and other problem cases
 if [[ ! -d "instances" ]]; then
+   # "instances" contains benchmarks and other problem cases
    mkdir instances
 fi
 
-# "tools" contains the solvers to run
 if [[ ! -d "tools" ]]; then
+   # "tools" contains the programs to run
    mkdir tools
 fi
 
-# "results" contains the output of bench.py in .csv format
 if [[ ! -d "results" ]]; then
+   # "results" contains the output of each program in a Mongo database
    mkdir results
 fi
 
-# "images" contains graphs generated from the data in "results"
 if [[ ! -d "images" ]]; then
+   # "images" contains graphs generated from the data in "results"
    mkdir images
-fi
-
-# "categories" contains JSON files for selected problem categories
-if [[ ! -d "bin/categories" ]]; then
-   mkdir bin/categories
 fi
 
 sudo apt install python3-pip
@@ -34,77 +29,35 @@ pip3 install matplotlib
 pip3 install numpy
 
 
-# SAT ONLY:
-# Enabled by default, or specified with parameter "-sat"
-if [[ $# -eq 0 || $1 = "-sat" ]]; then
+# CATEGORY-SPECIFIC:
+# Iterates through the user-provided installation scripts
 
-   if [[ ! -d "instances/sat" ]]; then
-      mkdir instances/sat
-   fi
+selected_categories=( "$@" )
 
-   if [[ ! -d "tools/sat" ]]; then
-      mkdir tools/sat
-   fi
+for category_dir in bin/categories
+do
+   if [[ $# -eq 0 || " ${selected_categories[@]} " =~ " ${category_dir} " ]]; then
 
-   if [[ ! -d "results/sat" ]]; then
-      mkdir results/sat
-   fi
+      if [[ ! -d "instances/${category_dir}" ]]; then
+         mkdir instances/${category_dir}
+      fi
 
-   if [[ ! -d "images/sat" ]]; then
-      mkdir images/sat
-   fi
+      if [[ ! -d "tools/${category_dir}" ]]; then
+         mkdir tools/${category_dir}
+      fi
 
-   cp bin/install_scripts/sat/sat.py bin/categories
+      if [[ ! -d "results/${category_dir}" ]]; then
+         mkdir results/${category_dir}
+      fi
 
-   bin/install_scripts/sat/minisat.sh
-   bin/install_scripts/sat/syrup.sh
+      if [[ ! -d "images/${category_dir}" ]]; then
+         mkdir images/${category_dir}
+      fi
 
-fi
-
-
-# SMT ONLY:
-# Enabled by default, or specified with parameter "-smt"
-if [[ $# -eq 0 || $1 = "-smt" ]]; then
-
-   if [[ ! -d "instances/smt" ]]; then
-      mkdir instances/smt
-   fi
-
-   if [[ ! -d "tools/smt" ]]; then
-      mkdir tools/smt
-   fi
-
-   if [[ ! -d "results/smt" ]]; then
-      mkdir results/smt
-   fi
-
-   if [[ ! -d "images/smt" ]]; then
-      mkdir images/smt
-   fi
-
-   cp bin/install_scripts/smt/smt.py bin/categories
-
-   bin/install_scripts/smt/cvc4.sh
-   bin/install_scripts/smt/z3.sh
-
-
-   # Fuzz some SMT problems for testing
-   git clone https://github.com/dblotsky/stringfuzz.git bin/stringfuzz
-   pushd bin/stringfuzz
-   git checkout random_word_eq
-   git pull origin random_word_eq
-   python3 setup.py install --user
-   popd
-
-   if [[ ! -d "instances/smt/random" ]]; then
-      mkdir instances/smt/random
-   fi
-
-   for i in {5..10}
-   do
-      for j in {1..10}
+      for program_dir in ${category_dir}
       do
-         bin/stringfuzz/bin/stringfuzzg -r random-ast -w -m -n $(( ( RANDOM % 5 ) + 1 )) -d $(( ( RANDOM % $i ) + 1 )) -v $(( ( RANDOM % $i ) + 1 )) -t $(( ( RANDOM % $i ) + 1 )) -l $(( ( RANDOM % $i ) + 1 )) -x $(( ( RANDOM % $i ) + 1 )) > instances/smt/random/$i-$j.smt2
+         bin/categories/${category_dir}/${program_dir}/install.sh
       done
-   done
-fi
+
+   fi
+done
