@@ -33,30 +33,35 @@ pip3 install numpy
 # Iterates through the user-provided installation scripts
 
 selected_categories=( "$@" )
+all_categories=(bin/categories/*)
 
-for category_dir in bin/categories
+for category_dir in "${all_categories[@]}"
 do
-   if [[ $# -eq 0 || " ${selected_categories[@]} " =~ " ${category_dir} " ]]; then
+   trimmed_cat=${category_dir##*/}
+   if [[ $# -eq 0 || " ${selected_categories[@]} " =~ " ${trimmed_cat} " ]]; then
 
-      if [[ ! -d "instances/${category_dir}" ]]; then
-         mkdir instances/${category_dir}
+      if [[ ! -d "instances/${trimmed_cat}" ]]; then
+         mkdir instances/${trimmed_cat}
       fi
 
-      if [[ ! -d "tools/${category_dir}" ]]; then
-         mkdir tools/${category_dir}
+      if [[ ! -d "tools/${trimmed_cat}" ]]; then
+         mkdir tools/${trimmed_cat}
       fi
 
-      if [[ ! -d "results/${category_dir}" ]]; then
-         mkdir results/${category_dir}
+      if [[ ! -d "results/${trimmed_cat}" ]]; then
+         mkdir results/${trimmed_cat}
       fi
 
-      if [[ ! -d "images/${category_dir}" ]]; then
-         mkdir images/${category_dir}
+      if [[ ! -d "images/${trimmed_cat}" ]]; then
+         mkdir images/${trimmed_cat}
       fi
 
-      for program_dir in ${category_dir}
+      all_programs=(${category_dir}/*)
+
+      for program_dir in "${all_programs[@]}"
       do
-         bin/categories/${category_dir}/${program_dir}/install.sh
+         trimmed_dir=${program_dir##*/}
+         bin/categories/${trimmed_cat}/${trimmed_dir}/install.sh
       done
 
    fi
