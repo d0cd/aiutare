@@ -17,7 +17,7 @@ CSV_HEADER = "Instance,Result,Time\n"
 RESULT = namedtuple('Result', ('problem', 'result', 'elapsed'))
 
 
-def run_problem(program, command, problem):
+def run_problem(program, command, problem, fp):
     # pass the problem to the command
     invocation = "%s %s" % (command, problem)
     # get start time
@@ -49,14 +49,8 @@ def run_problem(program, command, problem):
         # get result
         stdout = process.stdout.read().decode("utf-8", "ignore")
         stderr = process.stderr.read().decode("utf-8", "ignore")
-        output = OUTPUT_HANDLERS[program](problem, stdout + stderr)
-    # make result
-    result = RESULT(
-        problem=problem.split("/", 2)[2],
-        result=output,
-        elapsed=elapsed
-    )
-    return result
+        output = stdout + stderr
+    OUTPUT_HANDLERS[program](fp, problem, output, elapsed)
 
 
 # program, specification["id"], specification["command"], problems
@@ -67,11 +61,11 @@ def run_solver(args):
     problems = args[3]
     filename = "results/%s/%s.csv" % (CATEGORY_NAME, nickname)
 
+    # TODO: when database writing is implemented, connect to DB here
     with open(filename, 'w+', buffering=1) as fp:
         fp.write(CSV_HEADER)
         for problem in problems:
-            result = run_problem(program, command, problem)
-            fp.write("%s,%s,%s\n" % (result.problem, result.result, result.elapsed))
+            run_problem(program, command, problem, fp)
 
 
 def signal_handler():
@@ -108,13 +102,13 @@ def import_category():
 
         for program_dir in os.listdir("bin/categories/%s" % CATEGORY_NAME):
             if os.path.isdir("bin/categories/%s/%s" % (CATEGORY_NAME, program_dir)):
-                spec = importlib.util.spec_from_file_location("output2result",
-                                                              "bin/categories/%s/%s/output2result.py" %
+                spec = importlib.util.spec_from_file_location("output_handler",
+                                                              "bin/categories/%s/%s/output_handler.py" %
                                                               (CATEGORY_NAME, program_dir))
                 new_module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(new_module)
 
-                OUTPUT_HANDLERS[program_dir] = new_module.output2result
+                OUTPUT_HANDLERS[program_dir] = new_module.output_handler
 
     else:
         print("File at %s not found" % run_file)
