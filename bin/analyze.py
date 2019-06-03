@@ -238,12 +238,12 @@ def import_category():
         print("Invalid Input. Usage:  python3 analyze.py [category, e.g. sat]")
         exit(1)
 
-    category_file = "bin/categories/%s.py" % sys.argv[1]
-    if os.path.isfile(category_file):
-        global CATEGORY_NAME
-        CATEGORY_NAME = sys.argv[1]
-    else:
-        print("File at %s not found" % category_file)
+    global CATEGORY_NAME
+    CATEGORY_NAME = sys.argv[1]
+
+    results_dir = "bin/categories/%s" % CATEGORY_NAME
+    if not os.path.isdir(results_dir):
+        print("Results directory at %s not found" % results_dir)
         exit(1)
 
 

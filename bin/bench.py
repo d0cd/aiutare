@@ -6,6 +6,7 @@ import subprocess
 import signal
 import datetime
 import concurrent.futures
+import json
 import importlib
 from importlib import util
 
@@ -16,21 +17,7 @@ CSV_HEADER = "Instance,Result,Time\n"
 RESULT = namedtuple('Result', ('problem', 'result', 'elapsed'))
 
 
-def output2result(problem, output):
-    # it's important to check for unsat first, since sat
-    # is a substring of unsat
-    if 'UNSAT' in output or 'unsat' in output:
-        return 'unsat'
-    if 'SAT' in output or 'sat' in output:
-        return 'sat'
-    if 'UNKNOWN' in output or 'unknown' in output:
-        return 'unknown'
-
-    print(problem, ': Couldn\'t parse output', file=sys.stderr)
-    return 'error'
-
-
-def run_problem(command, problem):
+def run_problem(program, command, problem):
     # pass the problem to the command
     invocation = "%s %s" % (command, problem)
     # get start time
@@ -45,15 +32,15 @@ def run_problem(command, problem):
     )
     # wait for it to complete
     try:
-        process.wait(timeout=CATEGORY.TIMEOUT)
+        process.wait(timeout=TIMEOUT)
     # if it times out ...
     except subprocess.TimeoutExpired:
         # kill it
         print('TIMED OUT:', repr(invocation), '... killing', process.pid, file=sys.stderr)
         os.killpg(os.getpgid(process.pid), signal.SIGINT)
         # set timeout result
-        elapsed = CATEGORY.TIMEOUT
-        output = 'timeout (%.1f s)' % CATEGORY.TIMEOUT
+        elapsed = TIMEOUT
+        output = 'timeout (%.1f s)' % TIMEOUT
     # if it completes in time ...
     else:
         # measure run time
@@ -62,7 +49,7 @@ def run_problem(command, problem):
         # get result
         stdout = process.stdout.read().decode("utf-8", "ignore")
         stderr = process.stderr.read().decode("utf-8", "ignore")
-        output = output2result(problem, stdout + stderr)
+        output = OUTPUT_HANDLERS[program](problem, stdout + stderr)
     # make result
     result = RESULT(
         problem=problem.split("/", 2)[2],
@@ -72,16 +59,18 @@ def run_problem(command, problem):
     return result
 
 
+# program, specification["id"], specification["command"], problems
 def run_solver(args):
-    solver = args[0]
-    command = args[1]
-    problems = args[2]
-    filename = "results/%s/%s.csv" % (CATEGORY_NAME, solver)
+    program = args[0]
+    nickname = args[1]
+    command = args[2]
+    problems = args[3]
+    filename = "results/%s/%s.csv" % (CATEGORY_NAME, nickname)
 
     with open(filename, 'w+', buffering=1) as fp:
         fp.write(CSV_HEADER)
         for problem in problems:
-            result = run_problem(command, problem)
+            result = run_problem(program, command, problem)
             fp.write("%s,%s,%s\n" % (result.problem, result.result, result.elapsed))
 
 
@@ -98,19 +87,37 @@ def import_category():
         print("Invalid Input. Usage:  python3 bench.py [category, e.g. sat]")
         exit(1)
 
-    category_file = "bin/categories/%s.py" % sys.argv[1]
-    if os.path.isfile(category_file):
+    global CATEGORY_NAME
+    CATEGORY_NAME = sys.argv[1]
 
-        global CATEGORY_NAME
-        CATEGORY_NAME = sys.argv[1]
+    run_file = "bin/categories/%s/run_%s.json" % (CATEGORY_NAME, CATEGORY_NAME)
+    if os.path.isfile(run_file):
 
-        global CATEGORY
-        spec = importlib.util.spec_from_file_location(CATEGORY_NAME, category_file)
-        CATEGORY = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(CATEGORY)
+        with open(run_file) as f:
+            json_data = json.load(f)
+
+            global FILE_EXTENSION
+            FILE_EXTENSION = json_data["FILE_EXTENSION"]
+            global TIMEOUT
+            TIMEOUT = json_data["TIMEOUT"]
+            global PROGRAMS
+            PROGRAMS = json_data["PROGRAMS"]
+
+        global OUTPUT_HANDLERS
+        OUTPUT_HANDLERS = {}
+
+        for program_dir in os.listdir("bin/categories/%s" % CATEGORY_NAME):
+            if os.path.isdir("bin/categories/%s/%s" % (CATEGORY_NAME, program_dir)):
+                spec = importlib.util.spec_from_file_location("output2result",
+                                                              "bin/categories/%s/%s/output2result.py" %
+                                                              (CATEGORY_NAME, program_dir))
+                new_module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(new_module)
+
+                OUTPUT_HANDLERS[program_dir] = new_module.output2result
 
     else:
-        print("File at %s not found" % category_file)
+        print("File at %s not found" % run_file)
         exit(1)
 
 
@@ -118,14 +125,15 @@ def main():
     import_category()
 
     signal.signal(signal.SIGTERM, signal_handler)
-    problems = glob.glob("instances/%s/**/*.%s*" % (CATEGORY_NAME, CATEGORY.FILE_EXTENSION), recursive=True)
-    print(len(problems))
+    problems = glob.glob("instances/%s/**/*.%s*" % (CATEGORY_NAME, FILE_EXTENSION), recursive=True)
+    print("%d problem(s) found" % len(problems))
 
     # Need to delete old result files to maintain consistency with currently specified solvers
     for filePath in glob.glob("results/%s/*.csv" % CATEGORY_NAME):
         os.remove(filePath)
 
-    args = [[solver, command, problems] for solver, command in CATEGORY.SOLVERS.items()]
+    args = [[program, nickname, command, problems] for program, specifications in PROGRAMS.items() for
+            nickname, command in specifications.items()]
     try:
         with concurrent.futures.ProcessPoolExecutor() as executor:
             executor.map(run_solver, args)
