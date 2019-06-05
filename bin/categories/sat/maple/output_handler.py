@@ -1,9 +1,5 @@
-import os
 import sys
-
 import mongoengine
-from pymongo import MongoClient
-from mongoengine import *
 import importlib
 from importlib import util
 
@@ -33,9 +29,6 @@ def output_handler(nickname, instance, output, elapsed):
 
 # Formats and writes information to the database
 def write_results(nickname, instance, result, elapsed):
-
-    # client = MongoClient()
-    # db = client['sat_database']
 
     mongoengine.connect('sat_database')
     stripped_instance = instance.split("/", 2)[2]
