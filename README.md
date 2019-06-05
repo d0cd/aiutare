@@ -13,3 +13,9 @@ specified programs in the "bin/categories" directory (default is all):
 ```
 sudo ./run.sh [category, e.g. sat]
 ```
+
+### Cleanup
+- To kill MongoDB processes when finished:
+```
+sudo ./cleanup.sh
+```

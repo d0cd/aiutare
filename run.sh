@@ -8,6 +8,3 @@ fi
 python3 bin/bench.py $1
 python3 bin/test_read_db.py
 # python3 bin/analyze.py $1
-
-mongo_process=$(pgrep mongod)
-sudo kill ${mongo_process}
