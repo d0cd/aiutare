@@ -17,9 +17,9 @@ CSV_HEADER = "Instance,Result,Time\n"
 RESULT = namedtuple('Result', ('problem', 'result', 'elapsed'))
 
 
-def run_problem(program, command, problem, fp):
+def run_problem(program, nickname, command, instance):
     # pass the problem to the command
-    invocation = "%s %s" % (command, problem)
+    invocation = "%s %s" % (command, instance)
     # get start time
     start = datetime.datetime.now().timestamp()
     # run command
@@ -50,7 +50,7 @@ def run_problem(program, command, problem, fp):
         stdout = process.stdout.read().decode("utf-8", "ignore")
         stderr = process.stderr.read().decode("utf-8", "ignore")
         output = stdout + stderr
-    OUTPUT_HANDLERS[program](fp, problem, output, elapsed)
+    OUTPUT_HANDLERS[program](nickname, instance, output, elapsed)
 
 
 # program, specification["id"], specification["command"], problems
@@ -58,14 +58,10 @@ def run_solver(args):
     program = args[0]
     nickname = args[1]
     command = args[2]
-    problems = args[3]
-    filename = "results/%s/%s.csv" % (CATEGORY_NAME, nickname)
+    instances = args[3]
 
-    # TODO: when database writing is implemented, connect to DB here
-    with open(filename, 'w+', buffering=1) as fp:
-        fp.write(CSV_HEADER)
-        for problem in problems:
-            run_problem(program, command, problem, fp)
+    for instance in instances:
+        run_problem(program, nickname, command, instance)
 
 
 def signal_handler():
@@ -101,7 +97,7 @@ def import_category():
         OUTPUT_HANDLERS = {}
 
         for program_dir in os.listdir("bin/categories/%s" % CATEGORY_NAME):
-            if os.path.isdir("bin/categories/%s/%s" % (CATEGORY_NAME, program_dir)):
+            if os.path.isdir("bin/categories/%s/%s" % (CATEGORY_NAME, program_dir)) and program_dir != "__pycache__":
                 spec = importlib.util.spec_from_file_location("output_handler",
                                                               "bin/categories/%s/%s/output_handler.py" %
                                                               (CATEGORY_NAME, program_dir))
@@ -111,7 +107,7 @@ def import_category():
                 OUTPUT_HANDLERS[program_dir] = new_module.output_handler
 
     else:
-        print("File at %s not found" % run_file)
+        print("Run file at %s not found" % run_file)
         exit(1)
 
 
@@ -119,14 +115,10 @@ def main():
     import_category()
 
     signal.signal(signal.SIGTERM, signal_handler)
-    problems = glob.glob("instances/%s/**/*.%s*" % (CATEGORY_NAME, FILE_EXTENSION), recursive=True)
-    print("%d problem(s) found" % len(problems))
+    instances = glob.glob("instances/%s/**/*.%s*" % (CATEGORY_NAME, FILE_EXTENSION), recursive=True)
+    print("%d problem(s) found" % len(instances))
 
-    # Need to delete old result files to maintain consistency with currently specified solvers
-    for filePath in glob.glob("results/%s/*.csv" % CATEGORY_NAME):
-        os.remove(filePath)
-
-    args = [[program, nickname, command, problems] for program, specifications in PROGRAMS.items() for
+    args = [[program, nickname, command, instances] for program, specifications in PROGRAMS.items() for
             nickname, command in specifications.items()]
     try:
         with concurrent.futures.ProcessPoolExecutor() as executor:

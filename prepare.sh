@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# GENERAL:
-# Needed for all categories
-
+# GENERAL DIRECTORIES:
+# ---------------------
 if [[ ! -d "instances" ]]; then
    # "instances" contains benchmarks and other problem cases
    mkdir instances
@@ -14,7 +13,7 @@ if [[ ! -d "tools" ]]; then
 fi
 
 if [[ ! -d "results" ]]; then
-   # "results" contains the output of each program in a Mongo database
+   # "results" contains the program output data in a Mongo database
    mkdir results
 fi
 
@@ -23,15 +22,9 @@ if [[ ! -d "images" ]]; then
    mkdir images
 fi
 
-sudo apt install python3-pip
-pip3 install --upgrade pip
-pip3 install matplotlib
-pip3 install numpy
 
-
-# CATEGORY-SPECIFIC:
-# Iterates through the user-provided installation scripts
-
+# CATEGORY SETUP:
+# ---------------------
 selected_categories=( "$@" )
 all_categories=(bin/categories/*)
 
@@ -48,10 +41,6 @@ do
          mkdir tools/${trimmed_cat}
       fi
 
-      if [[ ! -d "results/${trimmed_cat}" ]]; then
-         mkdir results/${trimmed_cat}
-      fi
-
       if [[ ! -d "images/${trimmed_cat}" ]]; then
          mkdir images/${trimmed_cat}
       fi
@@ -66,3 +55,25 @@ do
 
    fi
 done
+
+
+# MONGODB SETUP:
+# ---------------------
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
+   # For Ubuntu 16.04
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
+   # For Ubuntu 18.04
+# echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
+sudo apt-get update
+sudo apt-get install -y mongodb-org
+
+mkdir results/log
+chmod 755 results/log
+
+
+# ANALYSIS TOOLS:
+# ---------------------
+sudo apt install python3-pip
+pip3 install --upgrade pip
+pip3 install matplotlib
+pip3 install numpy

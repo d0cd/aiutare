@@ -11,6 +11,5 @@ specified programs in the "bin/categories" directory (default is all):
 
 ### Usage
 ```
-python3 bin/bench.py [category, e.g. sat]
-python3 bin/analyze.py [category, e.g. sat]
+sudo ./run.sh [category, e.g. sat]
 ```

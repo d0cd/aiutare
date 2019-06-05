@@ -1,9 +1,20 @@
+import os
 import sys
+
+import mongoengine
+from pymongo import MongoClient
+from mongoengine import *
+import importlib
+from importlib import util
+
+spec = importlib.util.spec_from_file_location("schemas", "bin/categories/sat/schemas.py")
+schemas = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(schemas)
 
 
 # Parses the stdout + stderr output from running the problem
 # and extracts useful information
-def output_handler(fp, problem, output, elapsed):
+def output_handler(nickname, instance, output, elapsed):
     result = 'error'
 
     if 'UNSAT' in output or 'unsat' in output:
@@ -15,11 +26,25 @@ def output_handler(fp, problem, output, elapsed):
     elif 'UNKNOWN' in output or 'unknown' in output:
         result = 'unknown'
     else:
-        print(problem, ': Couldn\'t parse output', file=sys.stderr)
+        print(instance, ': Couldn\'t parse output', file=sys.stderr)
 
-    write_results(fp, problem, result, elapsed)
+    write_results(nickname, instance, result, elapsed)
 
 
 # Formats and writes information to the database
-def write_results(fp, problem, result, elapsed):
-    fp.write("%s,%s,%s\n" % (problem.split("/", 2)[2], result, elapsed))
+def write_results(nickname, instance, result, elapsed):
+
+    # client = MongoClient()
+    # db = client['sat_database']
+
+    mongoengine.connect('sat_database')
+    stripped_instance = instance.split("/", 2)[2]
+
+    this_instance = schemas.SATInstance.objects(filename=stripped_instance).modify(set__filename=stripped_instance,
+                                                                                   upsert=True, new=True)
+    this_result = schemas.SATResult(program="syrup")
+    this_result.nickname = nickname
+    this_result.instance = this_instance
+    this_result.result = result
+    this_result.elapsed = elapsed
+    this_result.save()
