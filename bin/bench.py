@@ -116,7 +116,7 @@ def main():
 
     signal.signal(signal.SIGTERM, signal_handler)
     instances = glob.glob("instances/%s/**/*.%s*" % (CATEGORY_NAME, FILE_EXTENSION), recursive=True)
-    print("%d problem(s) found" % len(instances))
+    print("%d %s instance(s) found" % (len(instances), CATEGORY_NAME))
 
     args = [[program, nickname, command, instances] for program, specifications in PROGRAMS.items() for
             nickname, command in specifications.items()]

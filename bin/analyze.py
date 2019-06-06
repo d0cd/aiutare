@@ -4,9 +4,8 @@ import time
 import os
 import importlib
 from importlib import util
-import mongoengine
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 # PLOTTING HELPERS
@@ -249,25 +248,13 @@ def import_category():
     spec = importlib.util.spec_from_file_location("schemas", "%s/schemas.py" % category_dir)
     schemas = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(schemas)
-    return schemas
+    return schemas.read_database()
 
 
 # ENTRY POINT
 
 def main():
-    schemas = import_category()
-    data = {}
-
-    mongoengine.connect('sat_database')
-    parsed_result = np.dtype([('Instance', '<U14'), ('Result', '<U7'), ('Time', '<f8')])
-    for SATResult in schemas.SATResult.objects():
-
-        new_data = np.array([(SATResult.instance.filename, SATResult.result, SATResult.elapsed)], dtype=parsed_result)
-
-        if SATResult.nickname in data:
-            data[SATResult.nickname] = np.append(data[SATResult.nickname], new_data)
-        else:
-            data[SATResult.nickname] = new_data
+    data = import_category()
 
     check_consensus(data)
     plot_cactus(data, "overall_cactus")
