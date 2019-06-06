@@ -9,6 +9,12 @@ import numpy as np
 class SMTInstance(Document):
     filename = StringField(required=True)
 
+    meta = {
+        'indexes': [
+            {'fields': ['filename'], 'unique': True}
+        ]
+    }
+
 
 class SMTResult(Document):
     program = StringField(required=True)

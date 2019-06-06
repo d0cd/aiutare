@@ -29,10 +29,13 @@ def output_handler(nickname, instance, output, elapsed):
 
 # Formats and writes information to the database
 def write_results(nickname, instance, result, elapsed):
+
     mongoengine.connect('smt_database')
     stripped_instance = instance.split("/", 2)[2]
 
-    schemas.SMTInstance.objects(filename=stripped_instance).update_one(set__filename=stripped_instance, upsert=True)
+    if not schemas.SMTInstance.objects(filename=stripped_instance):
+        schemas.SMTInstance.objects(filename=stripped_instance).update_one(upsert=True, set__filename=stripped_instance)
+
     this_instance = schemas.SMTInstance.objects.get(filename=stripped_instance)
 
     this_result = schemas.SMTResult(program="cvc4")
@@ -40,4 +43,4 @@ def write_results(nickname, instance, result, elapsed):
     this_result.instance = this_instance
     this_result.result = result
     this_result.elapsed = elapsed
-    this_result.save()
+    this_result.save(force_insert=True)

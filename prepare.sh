@@ -75,6 +75,8 @@ sudo apt-get install -y mongodb-org
 mkdir results/log
 chmod 755 results/log
 
+# TODO: mongoengine install command
+
 
 # ANALYSIS TOOLS:
 # ---------------------

@@ -9,6 +9,12 @@ import numpy as np
 class SATInstance(Document):
     filename = StringField(required=True)
 
+    meta = {
+        'indexes': [
+            {'fields': ['filename'], 'unique': True}
+        ]
+    }
+
 
 class SATResult(Document):
     program = StringField(required=True)

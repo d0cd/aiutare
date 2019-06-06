@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+git clone https://github.com/dblotsky/stringfuzz.git bin/stringfuzz
+pushd bin/stringfuzz
+git checkout random_word_eq
+git pull origin random_word_eq
+python3 setup.py install --user
+popd
+
 if [[ ! -d "instances/smt/random" ]]; then
    mkdir instances/smt/random
    fi
