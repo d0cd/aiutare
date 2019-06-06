@@ -32,8 +32,9 @@ def write_results(nickname, instance, result, elapsed):
     mongoengine.connect('smt_database')
     stripped_instance = instance.split("/", 2)[2]
 
-    this_instance = schemas.SMTInstance.objects(filename=stripped_instance).modify(set__filename=stripped_instance,
-                                                                                   upsert=True, new=True)
+    schemas.SMTInstance.objects(filename=stripped_instance).update_one(set__filename=stripped_instance, upsert=True)
+    this_instance = schemas.SMTInstance.objects.get(filename=stripped_instance)
+
     this_result = schemas.SMTResult(program="cvc4")
     this_result.nickname = nickname
     this_result.instance = this_instance

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-import importlib
 import sys
 import time
-import glob
 import os
-
+import importlib
+from importlib import util
+import mongoengine
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -241,23 +241,33 @@ def import_category():
     global CATEGORY_NAME
     CATEGORY_NAME = sys.argv[1]
 
-    results_dir = "bin/categories/%s" % CATEGORY_NAME
-    if not os.path.isdir(results_dir):
-        print("Results directory at %s not found" % results_dir)
+    category_dir = "bin/categories/%s" % CATEGORY_NAME
+    if not os.path.isdir(category_dir):
+        print("Category directory at %s not found" % category_dir)
         exit(1)
+
+    spec = importlib.util.spec_from_file_location("schemas", "%s/schemas.py" % category_dir)
+    schemas = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(schemas)
+    return schemas
 
 
 # ENTRY POINT
 
 def main():
-    import_category()
+    schemas = import_category()
     data = {}
-    result_files = glob.glob("results/%s/*.csv" % CATEGORY_NAME)
 
-    for result in result_files:
-        solver = os.path.basename(result)[:-len(".csv")]
-        data[solver] = np.genfromtxt(result, delimiter=',', dtype=None, encoding=None,
-                                     names=["Instance", "Result", "Time"], skip_header=1)
+    mongoengine.connect('sat_database')
+    parsed_result = np.dtype([('Instance', '<U14'), ('Result', '<U7'), ('Time', '<f8')])
+    for SATResult in schemas.SATResult.objects():
+
+        new_data = np.array([(SATResult.instance.filename, SATResult.result, SATResult.elapsed)], dtype=parsed_result)
+
+        if SATResult.nickname in data:
+            data[SATResult.nickname] = np.append(data[SATResult.nickname], new_data)
+        else:
+            data[SATResult.nickname] = new_data
 
     check_consensus(data)
     plot_cactus(data, "overall_cactus")

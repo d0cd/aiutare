@@ -6,5 +6,5 @@ if ! pgrep mongod > /dev/null ; then
 fi
 
 python3 bin/bench.py $1
-python3 bin/test_read_db.py
-# python3 bin/analyze.py $1
+# python3 bin/test_read_db.py
+python3 bin/analyze.py $1

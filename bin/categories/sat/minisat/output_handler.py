@@ -33,8 +33,9 @@ def write_results(nickname, instance, result, elapsed):
     mongoengine.connect('sat_database')
     stripped_instance = instance.split("/", 2)[2]
 
-    this_instance = schemas.SATInstance.objects(filename=stripped_instance).modify(set__filename=stripped_instance,
-                                                                                   upsert=True, new=True)
+    schemas.SATInstance.objects(filename=stripped_instance).update_one(set__filename=stripped_instance, upsert=True)
+    this_instance = schemas.SATInstance.objects.get(filename=stripped_instance)
+
     this_result = schemas.SATResult(program="minisat")
     this_result.nickname = nickname
     this_result.instance = this_instance

@@ -11,8 +11,8 @@ class SMTInstance(Document):
 class SMTResult(Document):
     program = StringField(required=True)
     nickname = StringField()
-    command = StringField()
-    version = StringField()
+    # command = StringField()
+    # version = StringField()
     instance = ReferenceField(SMTInstance, required=True)
     result = StringField(required=True)
     elapsed = FloatField(required=True)
