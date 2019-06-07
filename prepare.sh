@@ -57,7 +57,7 @@ do
 done
 
 
-# MONGODB SETUP:
+# MONGODB + MONGOENGINE SETUP:
 # ---------------------
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
 
@@ -72,10 +72,10 @@ fi
 sudo apt-get update
 sudo apt-get install -y mongodb-org
 
-mkdir results/log
-chmod 755 results/log
+user="$(id -u -n)"
+sudo chown -R ${user} ./results
 
-# TODO: mongoengine install command
+pip install mongoengine
 
 
 # ANALYSIS TOOLS:

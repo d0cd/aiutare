@@ -2,7 +2,7 @@
 
 # Start MongoDB if not already running
 if ! pgrep mongod > /dev/null ; then
-   sudo mongod --dbpath ./results --logpath ./results/log/mongodb.log --logappend &
+   mongod --dbpath ./results --logpath ./results/log/mongodb.log &
 fi
 
 num_benches=1
