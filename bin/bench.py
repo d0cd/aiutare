@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import sys
-import glob
 import subprocess
 import signal
 import datetime
@@ -111,22 +110,13 @@ def import_category():
         exit(1)
 
 
-def write_instances(instances):
-    spec = importlib.util.spec_from_file_location("schemas", "bin/categories/%s/schemas.py" % CATEGORY_NAME)
-    schemas = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(schemas)
-
-    schemas.write_instances(instances)
-
-
 def main():
     import_category()
 
     signal.signal(signal.SIGTERM, signal_handler)
-    instances = glob.glob("instances/%s/**/*.%s*" % (CATEGORY_NAME, FILE_EXTENSION), recursive=True)
-    print("%d %s instance(s) found" % (len(instances), CATEGORY_NAME))
 
-    write_instances(instances)
+    written_instances = open("bin/written_instances.json", 'r').read()
+    instances = json.loads(written_instances)
 
     args = [[program, nickname, command, instances] for program, specifications in PROGRAMS.items() for
             nickname, command in specifications.items()]
