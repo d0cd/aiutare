@@ -6,8 +6,9 @@ import numpy as np
 # MongoEngine schemas:
 # ---------------------
 
-class SMTInstance(Document):
+class Instance(Document):
     filename = StringField(required=True)
+    # TODO: add more fields here as needed
 
     meta = {
         'indexes': [
@@ -16,25 +17,24 @@ class SMTInstance(Document):
     }
 
 
-class SMTResult(Document):
+class Result(Document):
     program = StringField(required=True)
     nickname = StringField()
-    # command = StringField()
-    # version = StringField()
-    instance = ReferenceField(SMTInstance, required=True)
+    instance = ReferenceField(Instance, required=True)
     result = StringField(required=True)
     elapsed = FloatField(required=True)
+    # TODO: add more fields here as needed
 
 
 # Parses all unique instances and writes them to the database
 def write_instances(instances):
-    mongoengine.connect('smt_database')
+    mongoengine.connect('database_name')  # TODO: replace with name of your database here
 
     for instance in instances:
         stripped_instance = instance.split("/", 1)[1]
 
-        if not SMTInstance.objects(filename=stripped_instance):
-            SMTInstance.objects(filename=stripped_instance).update_one(upsert=True, set__filename=stripped_instance)
+        if not Instance.objects(filename=stripped_instance):
+            Instance.objects(filename=stripped_instance).update_one(upsert=True, set__filename=stripped_instance)
 
     mongoengine.connection.disconnect()
 
@@ -43,10 +43,11 @@ def write_instances(instances):
 def read_database():
     data = {}
 
-    mongoengine.connect('smt_database')
-    parsed_result = np.dtype([('Instance', '<U14'), ('Result', '<U7'), ('Time', '<f8')])
-    for result in SMTResult.objects():
+    mongoengine.connect('database_name')  # TODO: replace with name of your database here
+    parsed_result = np.dtype([('Instance', '<U14'), ('Result', '<U7'), ('Time', '<f8')])  # TODO: update with schema
+    for result in Result.objects():
 
+        # TODO: this will need to be modified if passing additional info to analyze.py
         new_data = np.array([(result.instance.filename, result.result, result.elapsed)], dtype=parsed_result)
 
         if result.nickname in data:

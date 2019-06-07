@@ -85,8 +85,6 @@ def import_category():
         with open(run_file) as f:
             json_data = json.load(f)
 
-            global FILE_EXTENSION
-            FILE_EXTENSION = json_data["FILE_EXTENSION"]
             global TIMEOUT
             TIMEOUT = json_data["TIMEOUT"]
             global PROGRAMS

@@ -1,0 +1,22 @@
+{
+  "commands" : "/home/ocallaha/PycharmProjects/aiutare/bin/categories/sat/run_sat.json",
+  "schemas" : "/home/ocallaha/PycharmProjects/aiutare/bin/categories/sat/schemas.py",
+  "programs" :
+  {
+    "syrup":
+    {
+      "install" : "/home/ocallaha/PycharmProjects/aiutare/bin/categories/sat/syrup/install.sh",
+      "output_handler" : "/home/ocallaha/PycharmProjects/aiutare/bin/categories/sat/syrup/output_handler.py"
+    },
+    "minisat":
+    {
+      "install" : "/home/ocallaha/PycharmProjects/aiutare/bin/categories/sat/minisat/install.sh",
+      "output_handler" : "/home/ocallaha/PycharmProjects/aiutare/bin/categories/sat/minisat/output_handler.py"
+    },
+    "maple":
+    {
+      "install" : "/home/ocallaha/PycharmProjects/aiutare/bin/categories/sat/maple/install.sh",
+      "output_handler" : "/home/ocallaha/PycharmProjects/aiutare/bin/categories/sat/maple/output_handler.py"
+    }
+  }
+}
