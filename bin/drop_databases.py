@@ -7,4 +7,4 @@ db1 = connect('sat_database')
 db1.drop_database('sat_database')
 
 db2 = connect('smt_database')
-# db2.drop_database('smt_database')
+db2.drop_database('smt_database')
