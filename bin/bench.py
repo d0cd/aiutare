@@ -111,12 +111,22 @@ def import_category():
         exit(1)
 
 
+def write_instances(instances):
+    spec = importlib.util.spec_from_file_location("schemas", "bin/categories/%s/schemas.py" % CATEGORY_NAME)
+    schemas = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(schemas)
+
+    schemas.write_instances(instances)
+
+
 def main():
     import_category()
 
     signal.signal(signal.SIGTERM, signal_handler)
     instances = glob.glob("instances/%s/**/*.%s*" % (CATEGORY_NAME, FILE_EXTENSION), recursive=True)
     print("%d %s instance(s) found" % (len(instances), CATEGORY_NAME))
+
+    write_instances(instances)
 
     args = [[program, nickname, command, instances] for program, specifications in PROGRAMS.items() for
             nickname, command in specifications.items()]

@@ -31,14 +31,10 @@ def output_handler(nickname, instance, output, elapsed):
 def write_results(nickname, instance, result, elapsed):
 
     mongoengine.connect('sat_database')
-    stripped_instance = instance.split("/", 2)[2]
 
-    if not schemas.SATInstance.objects(filename=stripped_instance):
-        schemas.SATInstance.objects(filename=stripped_instance).update_one(upsert=True, set__filename=stripped_instance)
+    this_instance = schemas.SATInstance.objects.get(filename=instance.split("/", 1)[1])
 
-    this_instance = schemas.SATInstance.objects.get(filename=stripped_instance)
-
-    this_result = schemas.SATResult(program="syrup")
+    this_result = schemas.SATResult(program="maple")
     this_result.nickname = nickname
     this_result.instance = this_instance
     this_result.result = result

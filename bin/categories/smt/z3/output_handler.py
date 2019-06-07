@@ -31,12 +31,8 @@ def output_handler(nickname, instance, output, elapsed):
 def write_results(nickname, instance, result, elapsed):
 
     mongoengine.connect('smt_database')
-    stripped_instance = instance.split("/", 2)[2]
 
-    if not schemas.SMTInstance.objects(filename=stripped_instance):
-        schemas.SMTInstance.objects(filename=stripped_instance).update_one(upsert=True, set__filename=stripped_instance)
-
-    this_instance = schemas.SMTInstance.objects.get(filename=stripped_instance)
+    this_instance = schemas.SMTInstance.objects.get(filename=instance.split("/", 1)[1])
 
     this_result = schemas.SMTResult(program="z3")
     this_result.nickname = nickname

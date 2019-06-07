@@ -26,6 +26,19 @@ class SMTResult(Document):
     elapsed = FloatField(required=True)
 
 
+# Parses all unique instances and writes them to the database
+def write_instances(instances):
+    mongoengine.connect('smt_database')
+
+    for instance in instances:
+        stripped_instance = instance.split("/", 1)[1]
+
+        if not SMTInstance.objects(filename=stripped_instance):
+            SMTInstance.objects(filename=stripped_instance).update_one(upsert=True, set__filename=stripped_instance)
+
+    mongoengine.connection.disconnect()
+
+
 # Function to parse data for analyze from the database
 def read_database():
     data = {}
