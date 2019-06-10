@@ -1,16 +1,17 @@
-import sys
 import glob
 import json
 import importlib
 from importlib import util
 
 
-def main():
-    category_name = sys.argv[1]
-    instances = glob.glob("instances/%s/**/*.*" % category_name, recursive=True)
-    print("%d %s instance(s) found" % (len(instances), category_name))
+CONFIG = json.loads(open("bin/config.json", 'r').read())
 
-    spec = importlib.util.spec_from_file_location("schemas", "bin/categories/%s/schemas.py" % category_name)
+
+def main():
+    instances = glob.glob("%s/**/*.*" % CONFIG["instances"], recursive=True)
+    print("%d instance(s) found" % len(instances))
+
+    spec = importlib.util.spec_from_file_location("schemas", CONFIG["schemas"])
     schemas = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(schemas)
 

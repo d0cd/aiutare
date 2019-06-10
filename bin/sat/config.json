@@ -1,8 +1,15 @@
 {
-  "FILE_EXTENSION" : "cnf",
-  "TIMEOUT" : 30.0,
-
-  "PROGRAMS" :
+  "instances" : "bin/sat/instances",
+  "schemas" : "bin/sat/schemas.py",
+  "database_name" : "sat_database",
+  "handlers" :
+  {
+    "syrup" : "bin/sat/syrup_handler.py",
+    "minisat" : "bin/sat/minisat_handler.py",
+    "maple" : "bin/sat/maple_handler.py"
+  },
+  "timeout" : 30.0,
+  "commands" :
   {
     "syrup":
     {

@@ -7,3 +7,4 @@ tools
 instances
 stringfuzz
 .z3-trace
+bin/written_instances.json

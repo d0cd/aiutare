@@ -1,10 +1,8 @@
+import json
 from mongoengine import connect
 
 
-# Uncomment as needed to clear the database(s) during testing
+CONFIG = json.loads(open("bin/config.json", 'r').read())
 
-db1 = connect('sat_database')
-db1.drop_database('sat_database')
-
-db2 = connect('smt_database')
-# db2.drop_database('smt_database')
+db1 = connect(CONFIG["database_name"])
+db1.drop_database(CONFIG["database_name"])

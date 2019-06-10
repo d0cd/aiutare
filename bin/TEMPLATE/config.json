@@ -1,0 +1,25 @@
+{
+  "instances" : "absolute_filepath/instances",
+  "schemas" : "absolute_filepath/schemas.py",
+  "database_name" : "TEMPLATE_database",
+  "handlers" :
+  {
+    "example_program1" : "absolute_filepath/program1_handler.py",
+    "example_program2" : "absolute_filepath/program2_handler.py",
+    "example_program3" : "absolute_filepath/program3_handler.py"
+  },
+  "timeout" : "timeout here in seconds, e.g. 30.0",
+  "commands" :
+  {
+    "example_program":
+    {
+      "command_nickname1": "path to tool with command line parameters, including timeout",
+      "command_nickname2": "path to tool with command line parameters, including timeout"
+    },
+    "example_program2":
+    {
+      "command_nickname1": "path to tool with command line parameters, including timeout",
+      "command_nickname2": "path to tool with command line parameters, including timeout"
+    }
+  }
+}
