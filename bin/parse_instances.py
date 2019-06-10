@@ -4,14 +4,14 @@ import importlib
 from importlib import util
 
 
-def main():
-    config_file = open("bin/config.json", 'r').read()
-    config = json.loads(config_file)
+CONFIG = json.loads(open("bin/config.json", 'r').read())
 
-    instances = glob.glob("%s/**/*.*" % config["instances"], recursive=True)
+
+def main():
+    instances = glob.glob("%s/**/*.*" % CONFIG["instances"], recursive=True)
     print("%d instance(s) found" % len(instances))
 
-    spec = importlib.util.spec_from_file_location("schemas", config["schemas"])
+    spec = importlib.util.spec_from_file_location("schemas", CONFIG["schemas"])
     schemas = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(schemas)
 

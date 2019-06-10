@@ -28,15 +28,15 @@ def run_problem(program, nickname, command, instance):
     )
     # wait for it to complete
     try:
-        process.wait(timeout=TIMEOUT)
+        process.wait(timeout=CONFIG["timeout"])
     # if it times out ...
     except subprocess.TimeoutExpired:
         # kill it
         print('TIMED OUT:', repr(invocation), '... killing', process.pid, file=sys.stderr)
         os.killpg(os.getpgid(process.pid), signal.SIGINT)
         # set timeout result
-        elapsed = TIMEOUT
-        output = 'timeout (%.1f s)' % TIMEOUT
+        elapsed = CONFIG["timeout"]
+        output = 'timeout (%.1f s)' % CONFIG["timeout"]
     # if it completes in time ...
     else:
         # measure run time
@@ -70,28 +70,15 @@ def signal_handler():
 
 def import_category():
 
-    if os.path.isfile(CONFIG["commands"]):
-        with open(CONFIG["commands"]) as f:
-            json_data = json.load(f)
+    global OUTPUT_HANDLERS
+    OUTPUT_HANDLERS = {}
 
-            global TIMEOUT
-            TIMEOUT = json_data["TIMEOUT"]
-            global PROGRAMS
-            PROGRAMS = json_data["PROGRAMS"]
+    for program in CONFIG["handlers"].items():
+        spec = importlib.util.spec_from_file_location("%s_handler" % program[0], program[1])
+        new_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(new_module)
 
-        global OUTPUT_HANDLERS
-        OUTPUT_HANDLERS = {}
-
-        for program in CONFIG["programs"].items():
-            spec = importlib.util.spec_from_file_location("%s_handler" % program[0], program[1])
-            new_module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(new_module)
-
-            OUTPUT_HANDLERS[program[0]] = new_module.output_handler
-
-    else:
-        print("Commands file at %s not found" % CONFIG["commands"])
-        exit(1)
+        OUTPUT_HANDLERS[program[0]] = new_module.output_handler
 
 
 def main():
@@ -103,7 +90,7 @@ def main():
     instances = json.loads(written_instances)
 
     args = [[program, nickname, command, instances] for
-            program, specifications in PROGRAMS.items() for
+            program, specifications in CONFIG["commands"].items() for
             nickname, command in specifications.items()]
     try:
         with concurrent.futures.ProcessPoolExecutor() as executor:

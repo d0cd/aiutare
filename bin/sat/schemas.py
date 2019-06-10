@@ -10,7 +10,7 @@ CONFIG = json.loads(open("bin/config.json", 'r').read())
 # MongoEngine schemas:
 # ---------------------
 
-class SATInstance(Document):
+class Instance(Document):
     filename = StringField(required=True)
 
     meta = {
@@ -20,12 +20,12 @@ class SATInstance(Document):
     }
 
 
-class SATResult(Document):
+class Result(Document):
     program = StringField(required=True)
     nickname = StringField()
     # command = StringField()
     # version = StringField()
-    instance = ReferenceField(SATInstance, required=True)
+    instance = ReferenceField(Instance, required=True)
     result = StringField(required=True)
     elapsed = FloatField(required=True)
 
@@ -37,8 +37,8 @@ def write_instances(instances):
     for instance in instances:
         stripped_instance = instance.split("/", 1)[1]
 
-        if not SATInstance.objects(filename=stripped_instance):
-            SATInstance.objects(filename=stripped_instance).update_one(upsert=True, set__filename=stripped_instance)
+        if not Instance.objects(filename=stripped_instance):
+            Instance.objects(filename=stripped_instance).update_one(upsert=True, set__filename=stripped_instance)
 
     mongoengine.connection.disconnect()
 
@@ -49,7 +49,7 @@ def read_database():
 
     mongoengine.connect(CONFIG["database_name"])
     parsed_result = np.dtype([('Instance', '<U14'), ('Result', '<U7'), ('Time', '<f8')])
-    for result in SATResult.objects():
+    for result in Result.objects():
 
         new_data = np.array([(result.instance.filename, result.result, result.elapsed)], dtype=parsed_result)
 
