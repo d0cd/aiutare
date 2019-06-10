@@ -2,6 +2,7 @@
   "commands" : "bin/sat/commands.json",
   "instances" : "bin/sat/instances",
   "schemas" : "bin/sat/schemas.py",
+  "database_name" : "sat_database",
   "programs" :
   {
     "syrup" : "bin/sat/syrup_handler.py",

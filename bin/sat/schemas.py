@@ -1,6 +1,10 @@
 import mongoengine
 from mongoengine import *
 import numpy as np
+import json
+
+
+CONFIG = json.loads(open("bin/config.json", 'r').read())
 
 
 # MongoEngine schemas:
@@ -28,7 +32,7 @@ class SATResult(Document):
 
 # Parses all unique instances and writes them to the database
 def write_instances(instances):
-    mongoengine.connect('sat_database')
+    mongoengine.connect(CONFIG["database_name"])
 
     for instance in instances:
         stripped_instance = instance.split("/", 1)[1]
@@ -43,7 +47,7 @@ def write_instances(instances):
 def read_database():
     data = {}
 
-    mongoengine.connect('sat_database')
+    mongoengine.connect(CONFIG["database_name"])
     parsed_result = np.dtype([('Instance', '<U14'), ('Result', '<U7'), ('Time', '<f8')])
     for result in SATResult.objects():
 
