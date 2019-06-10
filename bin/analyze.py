@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-import sys
 import time
-import os
+import json
 import importlib
 from importlib import util
 import numpy as np
 import matplotlib.pyplot as plt
+
+
+CONFIG = json.loads(open("bin/config.json", 'r').read())
 
 
 # PLOTTING HELPERS
@@ -56,7 +58,7 @@ def plot_cactus(data, name, show_date=False, yscale_log=True, out_type="pdf"):
         scatter_plot(ax, list(range(len(flt))), sorted(flt), solver)
 
     ax.legend()
-    fig.savefig("%s/%s" % ("images/" + CATEGORY_NAME, "%s.%s" % (name, out_type)), bbox_inches='tight')
+    fig.savefig("%s/%s" % ("images/" + CONFIG["category"], "%s.%s" % (name, out_type)), bbox_inches='tight')
     plt.close(fig)
 
 
@@ -98,7 +100,7 @@ def plot_times(data, name, average=True, include_overall=False, show_date=False,
     ax.set_xticklabels(choices)
     ax.set_xticks(list(range(len(choices))))
     ax.legend()
-    fig.savefig("%s/%s" % ("images/" + CATEGORY_NAME, "%s.%s" % (name, out_type)), bbox_inches='tight')
+    fig.savefig("%s/%s" % ("images/" + CONFIG["category"], "%s.%s" % (name, out_type)), bbox_inches='tight')
     plt.close(fig)
 
     print_times(average, choices, solvers, y_data_list)
@@ -131,7 +133,7 @@ def plot_counts(data, name, show_date=False, out_type="pdf"):
     ax.set_xticklabels(choices)
     ax.set_xticks(list(range(len(choices))))
     ax.legend()
-    fig.savefig("%s/%s" % ("images/" + CATEGORY_NAME, "%s.%s" % (name, out_type)), bbox_inches='tight')
+    fig.savefig("%s/%s" % ("images/" + CONFIG["category"], "%s.%s" % (name, out_type)), bbox_inches='tight')
     plt.close(fig)
 
     print_counts(choices, solvers, counts)
@@ -233,19 +235,8 @@ def print_times(average, choices, solvers, times):
 
 
 def import_category():
-    if len(sys.argv) != 2:
-        print("Invalid Input. Usage:  python3 analyze.py [category, e.g. sat]")
-        exit(1)
 
-    global CATEGORY_NAME
-    CATEGORY_NAME = sys.argv[1]
-
-    category_dir = "bin/categories/%s" % CATEGORY_NAME
-    if not os.path.isdir(category_dir):
-        print("Category directory at %s not found" % category_dir)
-        exit(1)
-
-    spec = importlib.util.spec_from_file_location("schemas", "%s/schemas.py" % category_dir)
+    spec = importlib.util.spec_from_file_location("schemas", CONFIG["schemas"])
     schemas = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(schemas)
     return schemas.read_database()

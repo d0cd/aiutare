@@ -1,22 +1,24 @@
 {
-  "commands" : "/home/ocallaha/PycharmProjects/aiutare/bin/categories/sat/run_sat.json",
-  "schemas" : "/home/ocallaha/PycharmProjects/aiutare/bin/categories/sat/schemas.py",
+  "category" : "sat",
+  "commands" : "bin/sat/commands.json",
+  "instances" : "bin/sat/instances",
+  "schemas" : "bin/sat/schemas.py",
   "programs" :
   {
-    "syrup":
+    "syrup" :
     {
-      "install" : "/home/ocallaha/PycharmProjects/aiutare/bin/categories/sat/syrup/install.sh",
-      "output_handler" : "/home/ocallaha/PycharmProjects/aiutare/bin/categories/sat/syrup/output_handler.py"
+      "install" : "bin/sat/syrup/install.sh",
+      "output_handler" : "bin/sat/syrup/output_handler.py"
     },
-    "minisat":
+    "minisat" :
     {
-      "install" : "/home/ocallaha/PycharmProjects/aiutare/bin/categories/sat/minisat/install.sh",
-      "output_handler" : "/home/ocallaha/PycharmProjects/aiutare/bin/categories/sat/minisat/output_handler.py"
+      "install" : "bin/sat/minisat/install.sh",
+      "output_handler" : "bin/sat/minisat/output_handler.py"
     },
-    "maple":
+    "maple" :
     {
-      "install" : "/home/ocallaha/PycharmProjects/aiutare/bin/categories/sat/maple/install.sh",
-      "output_handler" : "/home/ocallaha/PycharmProjects/aiutare/bin/categories/sat/maple/output_handler.py"
+      "install" : "bin/sat/maple/install.sh",
+      "output_handler" : "bin/sat/maple/output_handler.py"
     }
   }
 }

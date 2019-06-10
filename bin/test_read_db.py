@@ -2,7 +2,7 @@ import mongoengine
 import importlib
 from importlib import util
 
-spec = importlib.util.spec_from_file_location("schemas", "bin/categories/sat/schemas.py")
+spec = importlib.util.spec_from_file_location("schemas", "bin/sat/schemas.py")
 schemas = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(schemas)
 

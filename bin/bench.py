@@ -9,11 +9,8 @@ import json
 import importlib
 from importlib import util
 
-from collections import namedtuple
 
-# data
-CSV_HEADER = "Instance,Result,Time\n"
-RESULT = namedtuple('Result', ('problem', 'result', 'elapsed'))
+CONFIG = json.loads(open("bin/config.json", 'r').read())
 
 
 def run_problem(program, nickname, command, instance):
@@ -72,17 +69,9 @@ def signal_handler():
 
 
 def import_category():
-    if len(sys.argv) != 2:
-        print("Invalid Input. Usage:  python3 bench.py [category, e.g. sat]")
-        exit(1)
 
-    global CATEGORY_NAME
-    CATEGORY_NAME = sys.argv[1]
-
-    run_file = "bin/categories/%s/run_%s.json" % (CATEGORY_NAME, CATEGORY_NAME)
-    if os.path.isfile(run_file):
-
-        with open(run_file) as f:
+    if os.path.isfile(CONFIG["commands"]):
+        with open(CONFIG["commands"]) as f:
             json_data = json.load(f)
 
             global TIMEOUT
@@ -93,18 +82,15 @@ def import_category():
         global OUTPUT_HANDLERS
         OUTPUT_HANDLERS = {}
 
-        for program_dir in os.listdir("bin/categories/%s" % CATEGORY_NAME):
-            if os.path.isdir("bin/categories/%s/%s" % (CATEGORY_NAME, program_dir)) and program_dir != "__pycache__":
-                spec = importlib.util.spec_from_file_location("output_handler",
-                                                              "bin/categories/%s/%s/output_handler.py" %
-                                                              (CATEGORY_NAME, program_dir))
-                new_module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(new_module)
+        for program in CONFIG["programs"].items():
+            spec = importlib.util.spec_from_file_location("output_handler", program[1]["output_handler"])
+            new_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(new_module)
 
-                OUTPUT_HANDLERS[program_dir] = new_module.output_handler
+            OUTPUT_HANDLERS[program[0]] = new_module.output_handler
 
     else:
-        print("Run file at %s not found" % run_file)
+        print("Commands file at %s not found" % CONFIG["commands"])
         exit(1)
 
 
@@ -116,7 +102,8 @@ def main():
     written_instances = open("bin/written_instances.json", 'r').read()
     instances = json.loads(written_instances)
 
-    args = [[program, nickname, command, instances] for program, specifications in PROGRAMS.items() for
+    args = [[program, nickname, command, instances] for
+            program, specifications in PROGRAMS.items() for
             nickname, command in specifications.items()]
     try:
         with concurrent.futures.ProcessPoolExecutor() as executor:
