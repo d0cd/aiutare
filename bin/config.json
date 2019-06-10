@@ -1,24 +1,11 @@
 {
-  "category" : "sat",
   "commands" : "bin/sat/commands.json",
   "instances" : "bin/sat/instances",
   "schemas" : "bin/sat/schemas.py",
   "programs" :
   {
-    "syrup" :
-    {
-      "install" : "bin/sat/syrup/install.sh",
-      "output_handler" : "bin/sat/syrup/output_handler.py"
-    },
-    "minisat" :
-    {
-      "install" : "bin/sat/minisat/install.sh",
-      "output_handler" : "bin/sat/minisat/output_handler.py"
-    },
-    "maple" :
-    {
-      "install" : "bin/sat/maple/install.sh",
-      "output_handler" : "bin/sat/maple/output_handler.py"
-    }
+    "syrup" : "bin/sat/syrup_handler.py",
+    "minisat" : "bin/sat/minisat_handler.py",
+    "maple" : "bin/sat/maple_handler.py"
   }
 }

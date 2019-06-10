@@ -9,7 +9,7 @@ def main():
     config = json.loads(config_file)
 
     instances = glob.glob("%s/**/*.*" % config["instances"], recursive=True)
-    print("%d %s instance(s) found" % (len(instances), config["category"]))
+    print("%d instance(s) found" % len(instances))
 
     spec = importlib.util.spec_from_file_location("schemas", config["schemas"])
     schemas = importlib.util.module_from_spec(spec)

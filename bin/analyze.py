@@ -7,9 +7,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-CONFIG = json.loads(open("bin/config.json", 'r').read())
-
-
 # PLOTTING HELPERS
 
 def scatter_plot(ax, x_data, y_data, label):
@@ -58,7 +55,7 @@ def plot_cactus(data, name, show_date=False, yscale_log=True, out_type="pdf"):
         scatter_plot(ax, list(range(len(flt))), sorted(flt), solver)
 
     ax.legend()
-    fig.savefig("%s/%s" % ("images/" + CONFIG["category"], "%s.%s" % (name, out_type)), bbox_inches='tight')
+    fig.savefig("%s/%s" % ("images/", "%s.%s" % (name, out_type)), bbox_inches='tight')
     plt.close(fig)
 
 
@@ -100,7 +97,7 @@ def plot_times(data, name, average=True, include_overall=False, show_date=False,
     ax.set_xticklabels(choices)
     ax.set_xticks(list(range(len(choices))))
     ax.legend()
-    fig.savefig("%s/%s" % ("images/" + CONFIG["category"], "%s.%s" % (name, out_type)), bbox_inches='tight')
+    fig.savefig("%s/%s" % ("images/", "%s.%s" % (name, out_type)), bbox_inches='tight')
     plt.close(fig)
 
     print_times(average, choices, solvers, y_data_list)
@@ -133,7 +130,7 @@ def plot_counts(data, name, show_date=False, out_type="pdf"):
     ax.set_xticklabels(choices)
     ax.set_xticks(list(range(len(choices))))
     ax.legend()
-    fig.savefig("%s/%s" % ("images/" + CONFIG["category"], "%s.%s" % (name, out_type)), bbox_inches='tight')
+    fig.savefig("%s/%s" % ("images/", "%s.%s" % (name, out_type)), bbox_inches='tight')
     plt.close(fig)
 
     print_counts(choices, solvers, counts)
@@ -235,8 +232,8 @@ def print_times(average, choices, solvers, times):
 
 
 def import_category():
-
-    spec = importlib.util.spec_from_file_location("schemas", CONFIG["schemas"])
+    config = json.loads(open("bin/config.json", 'r').read())
+    spec = importlib.util.spec_from_file_location("schemas", config["schemas"])
     schemas = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(schemas)
     return schemas.read_database()

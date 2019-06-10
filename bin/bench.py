@@ -83,7 +83,7 @@ def import_category():
         OUTPUT_HANDLERS = {}
 
         for program in CONFIG["programs"].items():
-            spec = importlib.util.spec_from_file_location("output_handler", program[1]["output_handler"])
+            spec = importlib.util.spec_from_file_location("%s_handler" % program[0], program[1])
             new_module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(new_module)
 
