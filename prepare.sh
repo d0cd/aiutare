@@ -1,9 +1,10 @@
 #!/bin/bash
 
-
-if [[ ! $# -eq 1 || -f $1 ]]; then
+# CONFIG FILE LINKING:
+# ---------------------
+if [[ ! $# -eq 1 || ! -f $1 ]]; then
    echo "Please provide a valid config.json file"
-   echo "Usage: ./prepare.sh [path to config.json]"
+   echo "Usage: ./prepare.sh [ABSOLUTE path to config.json]"
    exit 1
 fi
 
@@ -15,7 +16,6 @@ if [[ -f bin/config.json ]]; then
 
    if [[ "${response}" = "Y" ]]; then
       echo "Now using new config file."
-      cp -fr $1 bin/config.json
 
    else
       echo "Abandoning setup"
@@ -23,6 +23,8 @@ if [[ -f bin/config.json ]]; then
    fi
 
 fi
+
+ln -sf $1 bin/config.json
 
 
 # MONGODB + MONGOENGINE SETUP:

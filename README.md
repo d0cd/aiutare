@@ -3,7 +3,7 @@ Automated Analysis, Regression, and Evaluation
 
 ### Setup
 ```
-./prepare.sh [path to config.json file]
+./prepare.sh [absolute path to config.json file]
 ```
 - (Currently written only for Ubuntu 16.04 and 18.04)
 

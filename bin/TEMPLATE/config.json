@@ -1,0 +1,12 @@
+{
+  "commands" : "absolute_filepath/commands.json",
+  "instances" : "absolute_filepath/instances",
+  "schemas" : "absolute_filepath/schemas.py",
+  "database_name" : "TEMPLATE_database",
+  "programs" :
+  {
+    "example_program1" : "absolute_filepath/program1_handler.py",
+    "example_program2" : "absolute_filepath/program2_handler.py",
+    "example_program3" : "absolute_filepath/program3_handler.py"
+  }
+}
