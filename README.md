@@ -2,6 +2,7 @@
 Automated Analysis, Regression, and Evaluation
 
 ### Setup
+- See the Setup wiki page for creating the config and other necessary files [TODO]
 ```
 ./prepare.sh [absolute path to config.json file]
 ```
