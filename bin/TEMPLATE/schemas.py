@@ -30,20 +30,8 @@ class Result(Document):
     # TODO: add more fields here as needed
 
 
-# Parses all unique instances and writes them to the database
-def write_instances(instances):
-    mongoengine.connect(CONFIG["database_name"])
-
-    for instance in instances:
-        stripped_instance = instance.split("/", 1)[1]
-
-        if not Instance.objects(filename=stripped_instance):
-            Instance.objects(filename=stripped_instance).update_one(upsert=True, set__filename=stripped_instance)
-
-    mongoengine.connection.disconnect()
-
-
-# Function to parse data for analyze from the database
+# Function to parse data for analyze from the database:
+# ------------------------------------------------------
 def read_database():
     data = {}
 

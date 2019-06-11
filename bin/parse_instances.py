@@ -2,6 +2,7 @@ import glob
 import json
 import importlib
 from importlib import util
+import mongoengine
 
 
 CONFIG = json.loads(open("bin/config.json", 'r').read())
@@ -15,8 +16,19 @@ def main():
     schemas = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(schemas)
 
-    schemas.write_instances(instances)
+    # Parses all unique instances and writes them to the database
+    mongoengine.connect(CONFIG["database_name"])
 
+    for instance in instances:
+        stripped_instance = instance.split("/", 1)[1]
+
+        if not schemas.Instance.objects(filename=stripped_instance):
+            schemas.Instance.objects(filename=stripped_instance).\
+                update_one(upsert=True, set__filename=stripped_instance)
+
+    mongoengine.connection.disconnect()
+
+    # Writes the instances to a local file to be read repeatedly by bench.py
     with open("bin/written_instances.json", 'w') as written_instances:
         written_instances.write(json.dumps(instances))
 
