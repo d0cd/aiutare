@@ -32,6 +32,33 @@ class Result(Document):
     elapsed = FloatField(required=True)
 
 
+# Formats and writes information to the database:
+# ------------------------------------------------
+def write_results(program, nickname, instance, result, elapsed):
+
+    mongoengine.connect(CONFIG["database_name"])
+
+    split_filename = instance.split("/", 1)[1]
+    this_instance = Instance.objects.get(filename=split_filename)
+
+    this_result = Result(program=program)
+    this_result.nickname = nickname
+    this_result.instance = this_instance
+    this_result.result = result
+    this_result.elapsed = elapsed
+    this_result.save(force_insert=True)
+
+    # Updates the current instance's counters with each result
+    if result == 'sat':
+        this_instance.modify(inc__num_sat=1)
+    elif result == 'unsat':
+        this_instance.modify(inc__num_unsat=1)
+    else:
+        this_instance.modify(inc__num_unknown=1)
+
+    mongoengine.connection.disconnect()
+
+
 # Function to parse data for analyze from the database:
 # ------------------------------------------------------
 def read_database():
@@ -49,16 +76,6 @@ def read_database():
         else:
             data[result.nickname] = new_data
 
-        # Updates the current instance's counters with each result
-        cur_instance = Instance.objects.get(filename=result.instance.filename)
-        if result.result == 'sat':
-            Instance.objects(filename=result.instance.filename).\
-                update_one(set__num_sat=cur_instance.num_sat + 1)
-        elif result.result == 'unsat':
-            Instance.objects(filename=result.instance.filename).\
-                update_one(set__num_unsat=cur_instance.num_unsat + 1)
-        else:
-            Instance.objects(filename=result.instance.filename).\
-                update_one(set__num_unknown=cur_instance.num_unknown + 1)
+    mongoengine.connection.disconnect()
 
     return data
