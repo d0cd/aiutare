@@ -12,6 +12,9 @@ CONFIG = json.loads(open("bin/config.json", 'r').read())
 
 class Instance(Document):
     filename = StringField(required=True)
+    num_sat = IntField(default=0)
+    num_unsat = IntField(default=0)
+    num_unknown = IntField(default=0)
     # TODO: add more fields here as needed
 
     meta = {
@@ -30,6 +33,34 @@ class Result(Document):
     # TODO: add more fields here as needed
 
 
+# Formats and writes information to the database:
+# ------------------------------------------------
+def write_results(program, nickname, instance, result, elapsed):
+
+    mongoengine.connect(CONFIG["database_name"])
+
+    split_filename = instance.split("/", 1)[1]
+    this_instance = Instance.objects.get(filename=split_filename)
+
+    this_result = Result(program=program)
+    this_result.nickname = nickname
+    this_result.instance = this_instance
+    this_result.result = result
+    this_result.elapsed = elapsed
+    # TODO: write other data as specified by your schema here before saving
+    this_result.save(force_insert=True)
+
+    # Updates the current instance's counters with each result
+    if result == 'sat':
+        this_instance.modify(inc__num_sat=1)
+    elif result == 'unsat':
+        this_instance.modify(inc__num_unsat=1)
+    else:
+        this_instance.modify(inc__num_unknown=1)
+
+    mongoengine.connection.disconnect()
+
+
 # Function to parse data for analyze from the database:
 # ------------------------------------------------------
 def read_database():
@@ -46,5 +77,7 @@ def read_database():
             data[result.nickname] = np.append(data[result.nickname], new_data)
         else:
             data[result.nickname] = new_data
+
+    mongoengine.connection.disconnect()
 
     return data
