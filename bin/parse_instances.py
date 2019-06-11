@@ -24,8 +24,7 @@ def main():
 
         if not schemas.Instance.objects(filename=stripped_instance):
             schemas.Instance.objects(filename=stripped_instance).\
-                update_one(upsert=True, set__filename=stripped_instance,
-                           set__num_sat=0, set__num_unsat=0, set__num_unknown=0,)
+                update_one(upsert=True, set__filename=stripped_instance)
 
     mongoengine.connection.disconnect()
 

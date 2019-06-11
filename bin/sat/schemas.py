@@ -12,9 +12,9 @@ CONFIG = json.loads(open("bin/config.json", 'r').read())
 
 class Instance(Document):
     filename = StringField(required=True)
-    num_sat = IntField()
-    num_unsat = IntField()
-    num_unknown = IntField()
+    num_sat = IntField(default=0)
+    num_unsat = IntField(default=0)
+    num_unknown = IntField(default=0)
 
     meta = {
         'indexes': [
