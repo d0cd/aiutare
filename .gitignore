@@ -3,8 +3,7 @@
 .directory
 images
 results
-tools
+bin/written_instances.json
+bin/config.json
 instances
-stringfuzz
-.z3-trace
 __pycache__

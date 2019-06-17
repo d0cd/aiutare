@@ -1,0 +1,18 @@
+{
+  "database_name": "String_database",
+  "instances"    : "/home/fmora/Documents/software/aiutare/instances",
+  "schemas"      : "/home/fmora/Documents/software/aiutare/configs/string_schemas.py",
+  "handlers"     :
+  {
+    "z3"  : "/home/fmora/Documents/software/aiutare/configs/string_handler.py"
+  },
+  "timeout"  : "30.0",
+  "commands" :
+  {
+    "z3_federico_debug":
+    {
+      "multiset": "z3 smt.str.multiset_check=true smt.str.count_abstraction=false smt.string_solver=z3str3 -T:33",
+      "count"   : "z3 smt.str.multiset_check=false smt.str.count_abstraction=true smt.string_solver=z3str3 -T:33"
+    }
+  }
+}

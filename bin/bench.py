@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import sys
-import glob
 import subprocess
 import signal
 import datetime
@@ -10,11 +9,8 @@ import json
 import importlib
 from importlib import util
 
-from collections import namedtuple
 
-# data
-CSV_HEADER = "Instance,Result,Time\n"
-RESULT = namedtuple('Result', ('problem', 'result', 'elapsed'))
+CONFIG = json.loads(open("bin/config.json", 'r').read())
 
 
 def run_problem(program, nickname, command, instance):
@@ -32,15 +28,15 @@ def run_problem(program, nickname, command, instance):
     )
     # wait for it to complete
     try:
-        process.wait(timeout=TIMEOUT)
+        process.wait(timeout=CONFIG["timeout"])
     # if it times out ...
     except subprocess.TimeoutExpired:
         # kill it
         print('TIMED OUT:', repr(invocation), '... killing', process.pid, file=sys.stderr)
         os.killpg(os.getpgid(process.pid), signal.SIGINT)
         # set timeout result
-        elapsed = TIMEOUT
-        output = 'timeout (%.1f s)' % TIMEOUT
+        elapsed = CONFIG["timeout"]
+        output = 'timeout (%.1f s)' % CONFIG["timeout"]
     # if it completes in time ...
     else:
         # measure run time
@@ -73,52 +69,28 @@ def signal_handler():
 
 
 def import_category():
-    if len(sys.argv) != 2:
-        print("Invalid Input. Usage:  python3 bench.py [category, e.g. sat]")
-        exit(1)
 
-    global CATEGORY_NAME
-    CATEGORY_NAME = sys.argv[1]
+    global OUTPUT_HANDLERS
+    OUTPUT_HANDLERS = {}
 
-    run_file = "bin/categories/%s/run_%s.json" % (CATEGORY_NAME, CATEGORY_NAME)
-    if os.path.isfile(run_file):
+    for program in CONFIG["handlers"].items():
+        spec = importlib.util.spec_from_file_location("%s_handler" % program[0], program[1])
+        new_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(new_module)
 
-        with open(run_file) as f:
-            json_data = json.load(f)
-
-            global FILE_EXTENSION
-            FILE_EXTENSION = json_data["FILE_EXTENSION"]
-            global TIMEOUT
-            TIMEOUT = json_data["TIMEOUT"]
-            global PROGRAMS
-            PROGRAMS = json_data["PROGRAMS"]
-
-        global OUTPUT_HANDLERS
-        OUTPUT_HANDLERS = {}
-
-        for program_dir in os.listdir("bin/categories/%s" % CATEGORY_NAME):
-            if os.path.isdir("bin/categories/%s/%s" % (CATEGORY_NAME, program_dir)) and program_dir != "__pycache__":
-                spec = importlib.util.spec_from_file_location("output_handler",
-                                                              "bin/categories/%s/%s/output_handler.py" %
-                                                              (CATEGORY_NAME, program_dir))
-                new_module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(new_module)
-
-                OUTPUT_HANDLERS[program_dir] = new_module.output_handler
-
-    else:
-        print("Run file at %s not found" % run_file)
-        exit(1)
+        OUTPUT_HANDLERS[program[0]] = new_module.output_handler
 
 
 def main():
     import_category()
 
     signal.signal(signal.SIGTERM, signal_handler)
-    instances = glob.glob("instances/%s/**/*.%s*" % (CATEGORY_NAME, FILE_EXTENSION), recursive=True)
-    print("%d %s instance(s) found" % (len(instances), CATEGORY_NAME))
 
-    args = [[program, nickname, command, instances] for program, specifications in PROGRAMS.items() for
+    written_instances = open("bin/written_instances.json", 'r').read()
+    instances = json.loads(written_instances)
+
+    args = [[program, nickname, command, instances] for
+            program, specifications in CONFIG["commands"].items() for
             nickname, command in specifications.items()]
     try:
         with concurrent.futures.ProcessPoolExecutor() as executor:

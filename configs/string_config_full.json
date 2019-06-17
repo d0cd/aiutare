@@ -1,0 +1,39 @@
+{
+  "database_name": "String_database",
+  "instances"    : "/home/fmora/Documents/software/aiutare/instances",
+  "schemas"      : "/home/fmora/Documents/software/aiutare/configs/string_schemas.py",
+  "handlers"     :
+  {
+    "cvc4": "/home/fmora/Documents/software/aiutare/configs/string_handler.py",
+    "z3"  : "/home/fmora/Documents/software/aiutare/configs/string_handler.py"
+  },
+  "timeout"  : "30.0",
+  "commands" :
+  {
+    "cvc4":
+    {
+      "models": "tools/cvc4 --lang smt --strings-exp --produce-models --tlimit=33000 -q",
+      "stock" : "tools/cvc4 --lang smt --strings-exp --tlimit=33000 -q"
+    },
+    "z3_master_rel":
+    {
+      "z3str3": "tools/master_rel   smt.string_solver=z3str3 -T:33",
+      "seq"   : "tools/master_rel   smt.string_solver=seq -T:33"
+    },
+    "z3_master_debug":
+    {
+      "z3str3": "tools/master_debug   smt.string_solver=z3str3 -T:33",
+      "seq"   : "tools/master_debug   smt.string_solver=seq -T:33"
+    },
+    "z3_federico_rel":
+    {
+      "multiset": "tools/federico_rel   smt.str.multiset_check=true smt.str.count_abstraction=false smt.string_solver=z3str3 -T:33",
+      "count"   : "tools/federico_rel   smt.str.multiset_check=false smt.str.count_abstraction=true smt.string_solver=z3str3 -T:33"
+    },
+    "z3_federico_debug":
+    {
+      "multiset": "tools/federico_debug   smt.str.multiset_check=true smt.str.count_abstraction=false smt.string_solver=z3str3 -T:33",
+      "count"   : "tools/federico_debug   smt.str.multiset_check=false smt.str.count_abstraction=true smt.string_solver=z3str3 -T:33"
+    }
+  }
+}

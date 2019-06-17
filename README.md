@@ -2,20 +2,19 @@
 Automated Analysis, Regression, and Evaluation
 
 ### Setup
-- To create the necessary file structure and install 
-specified programs in the "bin/categories" directory (default is all):
+- See the [Setup wiki page](https://github.com/FedericoAureliano/aiutare/wiki/Setup) for creating the config and other necessary files
 ```
-./prepare.sh [category, e.g. sat]
+./prepare.sh [absolute path to config.json file]
 ```
 - (Currently written only for Ubuntu 16.04 and 18.04)
 
 ### Usage
 ```
-./run.sh [category, e.g. sat] [number of runs; 1 if omitted]
+./run.sh [number of runs; 1 if omitted]
 ```
 
 ### Cleanup
-- To kill MongoDB processes when finished:
+- To kill MongoDB processes and purge logs when finished:
 ```
 ./cleanup.sh
 ```
