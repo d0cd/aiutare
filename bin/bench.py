@@ -10,7 +10,7 @@ import importlib
 from importlib import util
 
 
-CONFIG = json.loads(open("bin/config.json", 'r').read())
+CONFIG = json.loads(open("./config.json", 'r').read())
 
 
 def run_problem(program, nickname, command, instance):
@@ -86,7 +86,7 @@ def main():
 
     signal.signal(signal.SIGTERM, signal_handler)
 
-    written_instances = open("bin/written_instances.json", 'r').read()
+    written_instances = open("./written_instances.json", 'r').read()
     instances = json.loads(written_instances)
 
     args = [[program, nickname, command, instances] for

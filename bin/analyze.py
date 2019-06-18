@@ -194,7 +194,8 @@ def check_consensus(data):
             for _, vb in votes.items():
                 if done:
                     break
-                if va != vb and va in ['sat', 'unsat', 'unknown', 'error'] and vb in ['sat', 'unsat', 'unknown', 'error']:
+                if va != vb and va in ['sat', 'unsat', 'unknown', 'error'] and \
+                        vb in ['sat', 'unsat', 'unknown', 'error']:
                     issues.append((problem, votes))
                     done = True
                     break
@@ -232,7 +233,7 @@ def print_times(average, choices, solvers, times):
 
 
 def import_category():
-    config = json.loads(open("bin/config.json", 'r').read())
+    config = json.loads(open("./config.json", 'r').read())
     spec = importlib.util.spec_from_file_location("schemas", config["schemas"])
     schemas = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(schemas)

@@ -4,7 +4,7 @@ import numpy as np
 import json
 
 
-CONFIG = json.loads(open("bin/config.json", 'r').read())
+CONFIG = json.loads(open("../bin/config.json", 'r').read())
 
 
 # MongoEngine schemas:

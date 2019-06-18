@@ -6,5 +6,5 @@ if pgrep mongod > /dev/null ; then
    kill ${mongo_process}
 fi
 
-rm -f results/log/mongodb.log*
-rm -f bin/written_instances.json
+rm -f ../results/log/mongodb.log*
+rm -f ./written_instances.json

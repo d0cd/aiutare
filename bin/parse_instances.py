@@ -5,7 +5,7 @@ from importlib import util
 import mongoengine
 
 
-CONFIG = json.loads(open("bin/config.json", 'r').read())
+CONFIG = json.loads(open("./config.json", 'r').read())
 
 
 def main():
@@ -29,7 +29,7 @@ def main():
     mongoengine.connection.disconnect()
 
     # Writes the instances to a local file to be read repeatedly by bench.py
-    with open("bin/written_instances.json", 'w') as written_instances:
+    with open("./written_instances.json", 'w') as written_instances:
         written_instances.write(json.dumps(instances))
 
 

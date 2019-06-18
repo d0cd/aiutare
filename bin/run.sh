@@ -5,7 +5,7 @@ if ! pgrep mongod > /dev/null ; then
    mongod --dbpath ./results --logpath ./results/log/mongodb.log &
 fi
 
-python3 bin/parse_instances.py
+python3 ./parse_instances.py
 
 num_benches=1
 if [[ $# -eq 1 && $1 -gt 1 ]]; then
@@ -13,7 +13,7 @@ if [[ $# -eq 1 && $1 -gt 1 ]]; then
 fi
 
 for ((n=0;n<${num_benches};n++)); do
-   python3 bin/bench.py
+   python3 ./bench.py
 done
 
-python3 bin/analyze.py
+python3 ./analyze.py
