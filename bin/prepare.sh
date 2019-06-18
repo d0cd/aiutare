@@ -8,7 +8,7 @@ if [[ ! $# -eq 1 || ! -f $1 ]]; then
    exit 1
 fi
 
-if [[ -f bin/config.json ]]; then
+if [[ -f ./config.json ]]; then
 
    echo "WARNING: previous config file detected:"
    echo "Proceeding will overwrite existing image files."
@@ -24,14 +24,14 @@ if [[ -f bin/config.json ]]; then
 
 fi
 
-ln -sf $1 bin/config.json
+ln -sf $1 ./config.json
 
 
 # MONGODB + MONGOENGINE SETUP:
 # ---------------------
-if [[ ! -d "results" ]]; then
+if [[ ! -d "../results" ]]; then
 
-   mkdir results
+   mkdir ../results
 
    sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
 
@@ -47,7 +47,7 @@ if [[ ! -d "results" ]]; then
    sudo apt-get install -y mongodb-org
 
    user="$(id -u -n)"
-   sudo chown -R ${user} ./results
+   sudo chown -R ${user} ../results
 
    pip install mongoengine
 fi
@@ -55,14 +55,14 @@ fi
 
 # ANALYSIS TOOLS:
 # ---------------------
-if [[ ! -d "images" ]]; then
+if [[ ! -d "../images" ]]; then
 
-   mkdir images
+   mkdir ../images
 
    sudo apt install python3-pip
    pip3 install --upgrade pip
    pip3 install matplotlib
    pip3 install numpy
 
-   sudo chown -R ${user} ./images
+   sudo chown -R ${user} ../images
 fi

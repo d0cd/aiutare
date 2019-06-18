@@ -4,7 +4,7 @@ import json
 import importlib
 from importlib import util
 
-CONFIG = json.loads(open("bin/config.json", 'r').read())
+CONFIG = json.loads(open("../bin/config.json", 'r').read())
 spec = importlib.util.spec_from_file_location("schemas", CONFIG["schemas"])
 schemas = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(schemas)
