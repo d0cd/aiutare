@@ -81,7 +81,7 @@ def import_category():
         OUTPUT_HANDLERS[program[0]] = new_module.output_handler
 
 
-def main():
+def bench():
     import_category()
 
     signal.signal(signal.SIGTERM, signal_handler)
@@ -101,7 +101,3 @@ def main():
             sys.exit(0)
         except SystemExit:
             exit(0)
-
-
-if __name__ == '__main__':
-    main()

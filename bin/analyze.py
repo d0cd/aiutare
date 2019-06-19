@@ -241,14 +241,10 @@ def import_category():
 
 # ENTRY POINT
 
-def main():
+def analyze():
     data = import_category()
 
     check_consensus(data)
     plot_cactus(data, "overall_cactus")
     plot_counts(data, "overall_counts")
     plot_times(data, "overall_times")
-
-
-if __name__ == '__main__':
-    main()

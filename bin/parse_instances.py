@@ -8,7 +8,7 @@ import mongoengine
 CONFIG = json.loads(open("bin/config.json", 'r').read())
 
 
-def main():
+def parse_instances():
     instances = glob.glob("%s/**/*.*" % CONFIG["instances"], recursive=True)
     print("%d instance(s) found" % len(instances))
 
@@ -31,7 +31,3 @@ def main():
     # Writes the instances to a local file to be read repeatedly by bench.py
     with open("bin/written_instances.json", 'w') as written_instances:
         written_instances.write(json.dumps(instances))
-
-
-if __name__ == '__main__':
-    main()
