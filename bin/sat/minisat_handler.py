@@ -1,11 +1,10 @@
 import os
 import sys
-import json
 import importlib
 from importlib import util
+from bin.config import config
 
-CONFIG = json.loads(open("bin/config.json", 'r').read())
-spec = importlib.util.spec_from_file_location("schemas", CONFIG["schemas"])
+spec = importlib.util.spec_from_file_location("schemas", config["schemas"])
 schemas = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(schemas)
 

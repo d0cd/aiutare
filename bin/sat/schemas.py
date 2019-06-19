@@ -1,10 +1,7 @@
 import mongoengine
 from mongoengine import *
 import numpy as np
-import json
-
-
-CONFIG = json.loads(open("bin/config.json", 'r').read())
+from bin.config import config
 
 
 # MongoEngine schemas:
@@ -36,7 +33,7 @@ class Result(Document):
 # ------------------------------------------------
 def write_results(program, nickname, instance, result, elapsed):
 
-    mongoengine.connect(CONFIG["database_name"])
+    mongoengine.connect(config["database_name"])
 
     split_filename = instance.split("/", 1)[1]
     this_instance = Instance.objects.get(filename=split_filename)
@@ -64,7 +61,7 @@ def write_results(program, nickname, instance, result, elapsed):
 def read_database():
     data = {}
 
-    mongoengine.connect(CONFIG["database_name"])
+    mongoengine.connect(config["database_name"])
     parsed_result = np.dtype([('Instance', '<U14'), ('Result', '<U7'), ('Time', '<f8')])
     for result in Result.objects():
 

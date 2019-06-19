@@ -8,9 +8,7 @@ import concurrent.futures
 import json
 import importlib
 from importlib import util
-
-
-CONFIG = json.loads(open("bin/config.json", 'r').read())
+from bin.config import config
 
 
 def run_problem(program, nickname, command, instance):
@@ -28,15 +26,15 @@ def run_problem(program, nickname, command, instance):
     )
     # wait for it to complete
     try:
-        process.wait(timeout=CONFIG["timeout"])
+        process.wait(timeout=config["timeout"])
     # if it times out ...
     except subprocess.TimeoutExpired:
         # kill it
         print('TIMED OUT:', repr(invocation), '... killing', process.pid, file=sys.stderr)
         os.killpg(os.getpgid(process.pid), signal.SIGINT)
         # set timeout result
-        elapsed = CONFIG["timeout"]
-        output = 'timeout (%.1f s)' % CONFIG["timeout"]
+        elapsed = config["timeout"]
+        output = 'timeout (%.1f s)' % config["timeout"]
     # if it completes in time ...
     else:
         # measure run time
@@ -73,7 +71,7 @@ def import_category():
     global OUTPUT_HANDLERS
     OUTPUT_HANDLERS = {}
 
-    for program in CONFIG["handlers"].items():
+    for program in config["handlers"].items():
         spec = importlib.util.spec_from_file_location("%s_handler" % program[0], program[1])
         new_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(new_module)
@@ -90,7 +88,7 @@ def bench():
     instances = json.loads(written_instances)
 
     args = [[program, nickname, command, instances] for
-            program, specifications in CONFIG["commands"].items() for
+            program, specifications in config["commands"].items() for
             nickname, command in specifications.items()]
     try:
         with concurrent.futures.ProcessPoolExecutor() as executor:

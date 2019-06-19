@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 import time
-import json
 import importlib
 from importlib import util
 import numpy as np
 import matplotlib.pyplot as plt
+from bin.config import config
 
 
 # PLOTTING HELPERS
@@ -232,7 +232,6 @@ def print_times(average, choices, solvers, times):
 
 
 def import_category():
-    config = json.loads(open("bin/config.json", 'r').read())
     spec = importlib.util.spec_from_file_location("schemas", config["schemas"])
     schemas = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(schemas)

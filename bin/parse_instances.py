@@ -3,21 +3,19 @@ import json
 import importlib
 from importlib import util
 import mongoengine
-
-
-CONFIG = json.loads(open("bin/config.json", 'r').read())
+from bin.config import config
 
 
 def parse_instances():
-    instances = glob.glob("%s/**/*.*" % CONFIG["instances"], recursive=True)
+    instances = glob.glob("%s/**/*.*" % config["instances"], recursive=True)
     print("%d instance(s) found" % len(instances))
 
-    spec = importlib.util.spec_from_file_location("schemas", CONFIG["schemas"])
+    spec = importlib.util.spec_from_file_location("schemas", config["schemas"])
     schemas = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(schemas)
 
     # Parses all unique instances and writes them to the database
-    mongoengine.connect(CONFIG["database_name"])
+    mongoengine.connect(config["database_name"])
 
     for instance in instances:
         stripped_instance = instance.split("/", 1)[1]
