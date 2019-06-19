@@ -3,4 +3,5 @@
 .directory
 images
 results
+bin/config.py
 bin/written_instances.json

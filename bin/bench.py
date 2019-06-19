@@ -68,6 +68,8 @@ def signal_handler():
 
 def import_category():
 
+    # TODO: extract this to run so it is only performed once (write them to config.py?)
+
     global OUTPUT_HANDLERS
     OUTPUT_HANDLERS = {}
 
@@ -84,6 +86,7 @@ def bench():
 
     signal.signal(signal.SIGTERM, signal_handler)
 
+    # TODO: replace with a python file to eliminate loading
     written_instances = open("bin/written_instances.json", 'r').read()
     instances = json.loads(written_instances)
 
