@@ -1,8 +1,7 @@
-import json
 from mongoengine import connect
 
 
-CONFIG = json.loads(open("bin/config.json", 'r').read())
+from bin.config import config
 
-db1 = connect(CONFIG["database_name"])
-db1.drop_database(CONFIG["database_name"])
+db1 = connect(config["database_name"])
+db1.drop_database(config["database_name"])

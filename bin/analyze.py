@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import time
 import importlib
-from importlib import util
 import numpy as np
 import matplotlib.pyplot as plt
 from bin.config import config
@@ -232,9 +231,7 @@ def print_times(average, choices, solvers, times):
 
 
 def import_category():
-    spec = importlib.util.spec_from_file_location("schemas", config["schemas"])
-    schemas = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(schemas)
+    schemas = importlib.import_module(config["schemas"])
     return schemas.read_database()
 
 

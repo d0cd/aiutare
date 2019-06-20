@@ -5,9 +5,6 @@ import subprocess
 import signal
 import datetime
 import concurrent.futures
-import json
-import importlib
-from importlib import util
 from bin.config import config
 
 
@@ -66,29 +63,11 @@ def signal_handler():
         exit(0)
 
 
-def import_category():
-
-    # TODO: extract this to run so it is only performed once (write them to config.py?)
-
+def bench(instances, handlers):
     global OUTPUT_HANDLERS
-    OUTPUT_HANDLERS = {}
-
-    for program in config["handlers"].items():
-        spec = importlib.util.spec_from_file_location("%s_handler" % program[0], program[1])
-        new_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(new_module)
-
-        OUTPUT_HANDLERS[program[0]] = new_module.output_handler
-
-
-def bench():
-    import_category()
+    OUTPUT_HANDLERS = handlers
 
     signal.signal(signal.SIGTERM, signal_handler)
-
-    # TODO: replace with a python file to eliminate loading
-    written_instances = open("bin/written_instances.json", 'r').read()
-    instances = json.loads(written_instances)
 
     args = [[program, nickname, command, instances] for
             program, specifications in config["commands"].items() for

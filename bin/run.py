@@ -4,22 +4,26 @@ import sys
 import json
 import glob
 import mongoengine
-import importlib.util
+import importlib
 from subprocess import Popen, DEVNULL
-
-from bin.bench import bench
-from bin.analyze import analyze
+from multiprocessing import Process
 
 
-def parse_instances(config):
-    instances = glob.glob("%s/**/*.*" % config["instances"], recursive=True)
-    print("%d instance(s) found" % len(instances))
+def write_config(config):
 
-    spec = importlib.util.spec_from_file_location("schemas", config["schemas"])
-    schemas = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(schemas)
+    # convert modules into importable format
+    config["schemas"] = config["schemas"].rsplit(".", 1)[0].replace("/", ".")
+    for program, handler in config["handlers"].items():
+        config["handlers"][program] = handler.rsplit(".", 1)[0].replace("/", ".")
 
-    # Parses all unique instances and writes them to the database
+    with open("bin/config.py", "w") as file:
+        file.write("config = " + str(config) + "\n")
+        file.flush()
+
+
+def write_instances(config, instances):
+    schemas = importlib.import_module(config["schemas"])
+
     mongoengine.connect(config["database_name"])
 
     for instance in instances:
@@ -31,16 +35,22 @@ def parse_instances(config):
 
     mongoengine.connection.disconnect()
 
-    # Writes the instances to a local file to be read repeatedly by bench.py
-    with open("bin/written_instances.json", 'w') as written_instances:
-        written_instances.write(json.dumps(instances))
+
+def collect_handlers(config):
+
+    handlers = {}
+
+    for program in config["handlers"].items():
+        cur_module = importlib.import_module(program[1])
+        handlers[program[0]] = cur_module.output_handler
+
+    return handlers
 
 
 def main():
 
     config = json.loads(open(sys.argv[1], 'r').read())
-    with open("bin/config.py", "w") as file:
-        file.write("config = " + str(config))
+    write_config(config)
 
     mongo_server = Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split(),
                          stdout=DEVNULL)
@@ -49,13 +59,21 @@ def main():
     if len(sys.argv) > 2 and int(sys.argv[2]) >= 0:  # running bench 0 times just calls analyze
         num_bench = int(sys.argv[2])
 
-    if num_bench > 0:
+    if num_bench != 0:
 
-        parse_instances(config)
+        instances = glob.glob("%s/**/*.*" % config["instances"], recursive=True)
+        print("%d instance(s) found" % len(instances))
 
+        p = Process(target=write_instances, args=(config, instances))
+        p.start()
+        handlers = collect_handlers(config)
+        p.join()
+
+        from bin.bench import bench
         for _ in range(0, num_bench):
-            bench()
+            bench(instances, handlers)
 
+    from bin.analyze import analyze
     analyze()
 
     mongo_server.terminate()

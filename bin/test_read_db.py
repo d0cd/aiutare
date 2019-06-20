@@ -1,16 +1,12 @@
-import json
 import mongoengine
 import importlib
-from importlib import util
 
-CONFIG = json.loads(open("bin/config.json", 'r').read())
-spec = importlib.util.spec_from_file_location("schemas", CONFIG["schemas"])
-schemas = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(schemas)
+from bin.config import config
+schemas = importlib.import_module(config["schemas"])
 
 
 def main():
-    mongoengine.connect(CONFIG["database_name"])
+    mongoengine.connect(config["database_name"])
 
     print("%d Instances found" % len(schemas.Instance.objects()))
     print("%d Results found" % len(schemas.Result.objects()))
@@ -20,6 +16,8 @@ def main():
 
     for Result in schemas.Result.objects():
         print(Result.to_json())
+
+    mongoengine.connection.disconnect()
 
 
 if __name__ == '__main__':

@@ -1,12 +1,8 @@
 import os
 import sys
 import importlib
-from importlib import util
 from bin.config import config
-
-spec = importlib.util.spec_from_file_location("schemas", config["schemas"])
-schemas = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(schemas)
+schemas = importlib.import_module(config["schemas"])
 
 
 # Parses the stdout + stderr output from running the problem
