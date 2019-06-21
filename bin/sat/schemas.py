@@ -33,7 +33,7 @@ class Result(Document):
 # ------------------------------------------------
 def write_results(program, nickname, instance, result, elapsed):
 
-    mongoengine.connect(config["database_name"])
+    mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
 
     split_filename = instance.split("/", 1)[1]
     this_instance = Instance.objects.get(filename=split_filename)
@@ -61,7 +61,7 @@ def write_results(program, nickname, instance, result, elapsed):
 def read_database():
     data = {}
 
-    mongoengine.connect(config["database_name"])
+    mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
     parsed_result = np.dtype([('Instance', '<U14'), ('Result', '<U7'), ('Time', '<f8')])
     for result in Result.objects():
 
