@@ -27,7 +27,7 @@ def run_problem(program, nickname, command, instance):
     # if it times out ...
     except subprocess.TimeoutExpired:
         # kill it
-        print('TIMED OUT:', repr(invocation), '... killing', process.pid, file=sys.stderr)
+        # print('TIMED OUT:', repr(invocation), '... killing', process.pid, file=sys.stderr)
         os.killpg(os.getpgid(process.pid), signal.SIGINT)
         # set timeout result
         elapsed = config["timeout"]

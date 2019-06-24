@@ -6,8 +6,7 @@ schemas = importlib.import_module(config["schemas"])
 
 
 def main():
-    mongoengine.connect(config["database_name"])
-
+    mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
     print("%d Instances found" % len(schemas.Instance.objects()))
     print("%d Results found" % len(schemas.Result.objects()))
 

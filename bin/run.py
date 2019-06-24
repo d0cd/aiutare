@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-
 import sys
 import json
 import glob
+import progressbar
 import mongoengine
 import importlib
+from pymongo import MongoClient
 from subprocess import Popen, DEVNULL
 from multiprocessing import Process
 
@@ -24,7 +25,7 @@ def write_config(config):
 def write_instances(config, instances):
     schemas = importlib.import_module(config["schemas"])
 
-    mongoengine.connect(config["database_name"])
+    mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
 
     for instance in instances:
         stripped_instance = instance.split("/", 1)[1]
@@ -47,13 +48,32 @@ def collect_handlers(config):
     return handlers
 
 
+def monitor_database(config, num_instances, num_bench):
+    commands = config["commands"]
+
+    num_commands = 0
+    for program in list(commands.values()):
+        num_commands += len(list(program.values()))
+
+    print("Running %d total commands\n" % (num_commands * num_instances * num_bench))
+
+    client = MongoClient()
+    db = client[config["database_name"]]
+
+    with db.watch([{'$match': {'operationType': 'insert'}}]) as stream:
+
+        for _ in progressbar.progressbar(range(num_commands * num_instances * num_bench)):
+            stream.next()
+            # print(stream.next()["fullDocument"])  TODO: possibly use for live-updating output
+
+
 def main():
 
     config = json.loads(open(sys.argv[1], 'r').read())
     write_config(config)
 
-    mongo_server = Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split(),
-                         stdout=DEVNULL)
+    Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
+          " --replSet monitoring_replSet".split(), stdout=DEVNULL)
 
     num_bench = 1
     if len(sys.argv) > 2 and int(sys.argv[2]) >= 0:  # running bench 0 times just calls analyze
@@ -62,12 +82,14 @@ def main():
     if num_bench != 0:
 
         instances = glob.glob("%s/**/*.*" % config["instances"], recursive=True)
-        print("%d instance(s) found" % len(instances))
 
-        p = Process(target=write_instances, args=(config, instances))
-        p.start()
+        instance_writer = Process(target=write_instances, args=(config, instances))
+        instance_writer.start()
         handlers = collect_handlers(config)
-        p.join()
+        instance_writer.join()
+
+        database_monitor = Process(target=monitor_database, args=(config, len(instances), num_bench))
+        database_monitor.start()
 
         from bin.bench import bench
         for _ in range(0, num_bench):
@@ -76,7 +98,7 @@ def main():
     from bin.analyze import analyze
     analyze()
 
-    mongo_server.terminate()
+    # TODO: find and kill any running mongod process
 
 
 if __name__ == '__main__':
