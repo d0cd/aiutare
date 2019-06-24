@@ -64,6 +64,7 @@ def monitor_database(config, num_instances, num_bench):
 
         for _ in progressbar.progressbar(range(num_commands * num_instances * num_bench)):
             stream.next()
+            # print(stream.next()["fullDocument"])  TODO: possibly use for live-updating output
 
 
 def main():
@@ -72,8 +73,7 @@ def main():
     write_config(config)
 
     Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
-          " --replSet monitoring_replSet".split(),
-          stdout=DEVNULL)
+          " --replSet monitoring_replSet".split(), stdout=DEVNULL)
 
     num_bench = 1
     if len(sys.argv) > 2 and int(sys.argv[2]) >= 0:  # running bench 0 times just calls analyze
@@ -97,6 +97,8 @@ def main():
 
     from bin.analyze import analyze
     analyze()
+
+    # TODO: find and kill any running mongod process
 
 
 if __name__ == '__main__':
