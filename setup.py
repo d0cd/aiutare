@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# TODO: eventually add status messages for install process
 import os
 import psutil
 import setuptools
@@ -8,9 +7,9 @@ import time
 from subprocess import run, Popen, DEVNULL
 
 
-# Create directory structure
-os.makedirs("results/log")
-os.makedirs("images")
+print("Creating directory structure")
+os.makedirs("results/log", exist_ok=True)
+os.makedirs("images", exist_ok=True)
 
 uid = os.getuid()
 os.chown("results", uid, -1)
@@ -18,7 +17,7 @@ os.chown("results/log", uid, -1)
 os.chown("images", uid, -1)
 
 
-# Call correct OS MongoDB install script
+print("Calling correct OS MongoDB install script")
 operating_system = platform.system()
 if operating_system == "Linux":
     run(['./bin/install_mongodb/linux.sh'])
@@ -27,7 +26,7 @@ else:
     exit(1)
 
 
-# Create new database and initiate replica set
+print("Creating new database and initiate replica set")
 Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
       " --replSet monitoring_replSet".split(), stdout=DEVNULL)
 
@@ -44,13 +43,13 @@ for proc in psutil.process_iter():
         proc.kill()
 
 
-# Standard setup call
+print("Calling setuptools.setup function")
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="aiutare-finnbarroc",
-    version="0.0.1",
+    name="aiutare",
+    version="1.0",
     author="Federico Mora, Lukas Finnbarr O'Callahan",
     author_email="fmora@cs.toronto.edu, lukasocallahan@gmail.com",
     description="A benchmarking framework for SAT, SMT, and equivalence checking programs.",
@@ -61,7 +60,7 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: Ubuntu 16.04 and 18.04",
+        "Operating System :: POSIX :: Linux",
     ],
     install_requires=['mongoengine', 'matplotlib', 'numpy', 'progressbar2', 'pymongo', 'psutil']
 )
