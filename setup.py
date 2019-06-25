@@ -30,6 +30,8 @@ print("Creating new database and initiate replica set")
 Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
       " --replSet monitoring_replSet".split(), stdout=DEVNULL)
 
+# TODO: test this when no database exists
+
 code = 1
 while not code == 0:
     code = run("mongo --eval 'rs.initiate()'".split(), stdout=DEVNULL, stderr=DEVNULL).returncode
@@ -56,6 +58,15 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/FedericoAureliano/aiutare",
+    # entry_points=
+    # {
+    #     'console_scripts':
+    #         ['aiutare=bin.run:main']
+    # },
+    scripts=
+    [
+        'bin/aiutare'
+    ],
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
