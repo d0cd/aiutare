@@ -2,29 +2,27 @@
 import glob
 import progressbar
 import mongoengine
-import importlib
+import importlib.util
 import psutil
 from pymongo import MongoClient
 from subprocess import Popen, DEVNULL
 from multiprocessing import Process
 
 
-# def write_config(config):
-#
-#       TODO: need to convert "/" paths to "." paths for importing
-#
-#     # convert modules into importable format
-#     config["schemas"] = config["schemas"].rsplit(".", 1)[0].replace("/", ".")
-#     for program, handler in config["handlers"].items():
-#         config["handlers"][program] = handler.rsplit(".", 1)[0].replace("/", ".")
-#
-#     with open("/home/ocallaha/PycharmProjects/aiutare/bin/config.py", "w") as file:
-#         file.write("config = " + str(config) + "\n")
-#         file.flush()
+def write_config(config):
+
+    # convert modules into importable format
+    config["schemas"] = config["schemas"].rsplit(".", 1)[0].replace("/", ".")
+    for program, handler in config["handlers"].items():
+        config["handlers"][program] = handler.rsplit(".", 1)[0].replace("/", ".")
+
+    with open("bin/config.py", "w") as file:
+        file.write("config = " + str(config) + "\n")
+        file.flush()
 
 
-def write_instances(config, instances, install_path):
-    schemas = importlib.import_module(install_path + config["schemas"])
+def write_instances(config, instances):
+    schemas = importlib.import_module(config["schemas"])
 
     mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
 
@@ -38,12 +36,12 @@ def write_instances(config, instances, install_path):
     mongoengine.connection.disconnect()
 
 
-def collect_handlers(config, install_path):
+def collect_handlers(config):
 
     handlers = {}
 
     for program in config["handlers"].items():
-        cur_module = importlib.import_module(install_path + program[1])
+        cur_module = importlib.import_module(program[1])
         handlers[program[0]] = cur_module.output_handler
 
     return handlers
@@ -70,25 +68,25 @@ def monitor_database(config, num_instances, num_bench):
 
 def run(config_filepath, num_bench):
 
-    config = importlib.import_module(config_filepath).config
+    spec = importlib.util.spec_from_file_location("config", config_filepath)
+    config_file = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(config_file)
+    config = config_file.config
 
-    if config["absolute_filepaths"]:
-        install_path = ""
-    else:
-        install_path = config_filepath[:config_filepath.rindex("/aiutare/")+9]
+    write_config(config)
 
-    Popen(("mongod --dbpath %s./results --logpath %s./results/log/mongodb.log" % (install_path, install_path)).split() +
+    # install_path = config_filepath[:config_filepath.rindex("/aiutare/")+9]
+
+    Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
           " --replSet monitoring_replSet".split(), stdout=DEVNULL)
-
-
 
     if num_bench > 0:
 
-        instances = glob.glob("%s/**/*.*" % (install_path + config["instances"]), recursive=True)
+        instances = glob.glob("%s/**/*.*" % config["instances"], recursive=True)
 
-        instance_writer = Process(target=write_instances, args=(config, instances, install_path))
+        instance_writer = Process(target=write_instances, args=(config, instances))
         instance_writer.start()
-        handlers = collect_handlers(config, install_path)
+        handlers = collect_handlers(config)
         instance_writer.join()
 
         database_monitor = Process(target=monitor_database, args=(config, len(instances), num_bench))
@@ -96,10 +94,10 @@ def run(config_filepath, num_bench):
 
         from bin.bench import bench
         for _ in range(0, num_bench):
-            bench(instances, handlers, config, install_path)
+            bench(instances, handlers)
 
     from bin.analyze import analyze
-    analyze(install_path + config["schemas"])
+    analyze()
 
     procname = "mongod"
 

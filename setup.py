@@ -50,15 +50,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/FedericoAureliano/aiutare",
-    # entry_points=
-    # {
-    #     'console_scripts':
-    #         ['aiutare=bin.run:main']
-    # },
-    scripts=
-    [
-        'bin/aiutare'  # TODO: make a wrapper "aiutare" exe that can be called from the EGG dir
-    ],
+    scripts=['bin/aiutare'],
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

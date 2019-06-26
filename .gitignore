@@ -1,8 +1,11 @@
 .vscode
 .idea
 .directory
+
 images
 results
 bin/config.py
-bin/written_instances.json
-bin/sat/instances
+
+aiutare.egg-info
+build
+dist
