@@ -33,13 +33,9 @@ class Result(Document):
     elapsed = FloatField(required=True)
 
     # Information gathered from MiniSAT output
-    num_restarts = FloatField()
     num_conflicts = FloatField()
     num_decisions = FloatField()
     num_propagations = FloatField()
-    num_conflictliterals = FloatField()
-    memory_used_MB = FloatField()
-    CPU_time_seconds = FloatField()
 
 
 # Formats and writes information to the database:
@@ -58,13 +54,9 @@ def write_results(program, nickname, instance, result, elapsed, results_dict=Non
     this_result.elapsed = elapsed
 
     if results_dict:
-        this_result.num_restarts = results_dict["num_restarts"]
         this_result.num_conflicts = results_dict["num_conflicts"]
         this_result.num_decisions = results_dict["num_decisions"]
         this_result.num_propagations = results_dict["num_propagations"]
-        this_result.num_conflictliterals = results_dict["num_conflictliterals"]
-        this_result.memory_used_MB = results_dict["memory_used_MB"]
-        this_result.CPU_time_seconds = results_dict["CPU_time_seconds"]
 
     this_result.save(force_insert=True)
 
