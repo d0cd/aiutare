@@ -5,7 +5,6 @@ import subprocess
 import signal
 import datetime
 import concurrent.futures
-from bin.config import config
 
 
 def run_problem(program, nickname, command, instance):
@@ -23,15 +22,15 @@ def run_problem(program, nickname, command, instance):
     )
     # wait for it to complete
     try:
-        process.wait(timeout=config["timeout"])
+        process.wait(timeout=CONFIG["timeout"])
     # if it times out ...
     except subprocess.TimeoutExpired:
         # kill it
         # print('TIMED OUT:', repr(invocation), '... killing', process.pid, file=sys.stderr)
         os.killpg(os.getpgid(process.pid), signal.SIGINT)
         # set timeout result
-        elapsed = config["timeout"]
-        output = 'timeout (%.1f s)' % config["timeout"]
+        elapsed = CONFIG["timeout"]
+        output = 'timeout (%.1f s)' % CONFIG["timeout"]
     # if it completes in time ...
     else:
         # measure run time
@@ -41,7 +40,7 @@ def run_problem(program, nickname, command, instance):
         stdout = process.stdout.read().decode("utf-8", "ignore")
         stderr = process.stderr.read().decode("utf-8", "ignore")
         output = stdout + stderr
-    OUTPUT_HANDLERS[program](nickname, instance, output, elapsed)
+    OUTPUT_HANDLERS[program](nickname, instance, output, elapsed, (INSTALL_PATH + CONFIG["schemas"]))
 
 
 # program, specification["id"], specification["command"], problems
@@ -63,14 +62,18 @@ def signal_handler():
         exit(0)
 
 
-def bench(instances, handlers):
+def bench(instances, handlers, config, install_path):
     global OUTPUT_HANDLERS
     OUTPUT_HANDLERS = handlers
+    global CONFIG
+    CONFIG = config
+    global INSTALL_PATH
+    INSTALL_PATH = install_path
 
     signal.signal(signal.SIGTERM, signal_handler)
 
-    args = [[program, nickname, command, instances] for
-            program, specifications in config["commands"].items() for
+    args = [[program, nickname, (INSTALL_PATH + command), instances] for
+            program, specifications in CONFIG["commands"].items() for
             nickname, command in specifications.items()]
     try:
         with concurrent.futures.ProcessPoolExecutor() as executor:

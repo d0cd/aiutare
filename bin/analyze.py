@@ -3,7 +3,6 @@ import time
 import importlib
 import numpy as np
 import matplotlib.pyplot as plt
-from bin.config import config
 
 
 # PLOTTING HELPERS
@@ -230,15 +229,15 @@ def print_times(average, choices, solvers, times):
         print(", ".join(c for c in [solvers[i]] + list(map(repr, times[i]))))
 
 
-def import_category():
-    schemas = importlib.import_module(config["schemas"])
+def import_category(schemas_filepath):
+    schemas = importlib.import_module(schemas_filepath)
     return schemas.read_database()
 
 
 # ENTRY POINT
 
-def analyze():
-    data = import_category()
+def analyze(schemas_filepath):
+    data = import_category(schemas_filepath)
 
     check_consensus(data)
     plot_cactus(data, "overall_cactus")

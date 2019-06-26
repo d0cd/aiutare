@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-import psutil
 import setuptools
 import platform
 import time
@@ -27,7 +26,7 @@ else:
 
 
 print("Creating new database and initiate replica set")
-Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
+Popen("sudo mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
       " --replSet monitoring_replSet".split(), stdout=DEVNULL)
 
 # TODO: test this when no database exists
@@ -36,13 +35,6 @@ code = 1
 while not code == 0:
     code = run("mongo --eval 'rs.initiate()'".split(), stdout=DEVNULL, stderr=DEVNULL).returncode
     time.sleep(.5)
-
-
-PROCNAME = "mongod"
-
-for proc in psutil.process_iter():
-    if proc.name() == PROCNAME:
-        proc.kill()
 
 
 print("Calling setuptools.setup function")
@@ -65,7 +57,7 @@ setuptools.setup(
     # },
     scripts=
     [
-        'bin/aiutare'
+        'bin/aiutare'  # TODO: make a wrapper "aiutare" exe that can be called from the EGG dir
     ],
     packages=setuptools.find_packages(),
     classifiers=[
@@ -75,3 +67,11 @@ setuptools.setup(
     ],
     install_requires=['mongoengine', 'matplotlib', 'numpy', 'progressbar2', 'pymongo', 'psutil']
 )
+
+
+import psutil
+PROCNAME = "mongod"
+
+for proc in psutil.process_iter():
+    if proc.name() == PROCNAME:
+        proc.kill()
