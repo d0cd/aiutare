@@ -13,6 +13,10 @@ class Instance(Document):
     num_unsat = IntField(default=0)
     num_unknown = IntField(default=0)
 
+    # Information gathered from MiniSAT output
+    num_variables = IntField(default=0)
+    num_clauses = IntField(default=0)
+
     meta = {
         'indexes': [
             {'fields': ['filename'], 'unique': True}
@@ -28,10 +32,19 @@ class Result(Document):
     result = StringField(required=True)
     elapsed = FloatField(required=True)
 
+    # Information gathered from MiniSAT output
+    num_restarts = FloatField()
+    num_conflicts = FloatField()
+    num_decisions = FloatField()
+    num_propagations = FloatField()
+    num_conflictliterals = FloatField()
+    memory_used_MB = FloatField()
+    CPU_time_seconds = FloatField()
+
 
 # Formats and writes information to the database:
 # ------------------------------------------------
-def write_results(program, nickname, instance, result, elapsed):
+def write_results(program, nickname, instance, result, elapsed, results_dict=None):
 
     mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
 
@@ -43,6 +56,16 @@ def write_results(program, nickname, instance, result, elapsed):
     this_result.instance = this_instance
     this_result.result = result
     this_result.elapsed = elapsed
+
+    if results_dict:
+        this_result.num_restarts = results_dict["num_restarts"]
+        this_result.num_conflicts = results_dict["num_conflicts"]
+        this_result.num_decisions = results_dict["num_decisions"]
+        this_result.num_propagations = results_dict["num_propagations"]
+        this_result.num_conflictliterals = results_dict["num_conflictliterals"]
+        this_result.memory_used_MB = results_dict["memory_used_MB"]
+        this_result.CPU_time_seconds = results_dict["CPU_time_seconds"]
+
     this_result.save(force_insert=True)
 
     # Updates the current instance's counters with each result
@@ -52,6 +75,9 @@ def write_results(program, nickname, instance, result, elapsed):
         this_instance.modify(inc__num_unsat=1)
     else:
         this_instance.modify(inc__num_unknown=1)
+
+    # Updates the current instance's variable and clause counts
+    # TODO
 
     mongoengine.connection.disconnect()
 
