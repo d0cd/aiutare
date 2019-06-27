@@ -5,7 +5,6 @@ import mongoengine
 import plotly
 import plotly.graph_objs as go
 from bin.config import config
-import scipy
 from scipy import stats
 import numpy as np
 
@@ -25,7 +24,7 @@ y_coords = []
 
 x_coords = []
 
-for i in range(4):
+for i in range(len(names)):
     x_coords.append([])
     y_coords.append([])
 
@@ -37,24 +36,35 @@ for result in schemas.Result.objects():
         y_coords[index].append(result.elapsed)
         x_coords[index].append(result.num_propagations)
 
-data = [None]*(2*len(names))
+data = []
 
 for i in range(len(names)):
-    data[i] = go.Scatter(
-        x=x_coords[i],
-        y=y_coords[i],
-        mode='markers',
-        name=names[i]
-    )
-    slope, intercept, r_value, p_value, std_err = stats.linregress(x_coords[i],y_coords[i])
-    if r_value^2>0.8:
-        data[i+len(names)]= go.Scatter(
-            x=[0.0,1.0],
-            y=[intercept,slope+intercept],
-            mode = 'line',
-            name=(names[i]+"Regression Line")
-        )
-
+    if len(x_coords)>0:
+        data.append(go.Scatter(
+            x=x_coords[i],
+            y=y_coords[i],
+            mode='markers',
+            name=names[i]
+        ))
+        slope, intercept, r_value, p_value, std_err = stats.linregress(x_coords[i],y_coords[i])
+        if r_value**2>0.8:
+            data.append(go.Scatter(
+                x=[0.0,max(x_coords[i])],
+                y=[intercept,slope * max(x_coords[i])+intercept],
+                mode = 'lines',
+                name=(names[i]+" Regression Line")
+            ))
+        else:
+            z = np.polyfit(x_coords[i], y_coords[i], 2)
+            f = np.poly1d(z)
+            x_coords_tmp = np.linspace(0,max(x_coords[i]),200)
+            y_coords_tmp = f(x_coords_tmp)
+            data.append(go.Scatter(
+                x=x_coords_tmp,
+                y=y_coords_tmp,
+                mode = 'lines',
+                name = (names[i]+" Regression Line")
+            ))
 
 
 layout= go.Layout(
