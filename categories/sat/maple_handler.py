@@ -1,7 +1,7 @@
 import os
 import importlib
 from bin.config import config
-
+from bin.error_file_writer import write_error
 
 # Parses the stdout + stderr output from running the problem
 # and extracts useful information
@@ -37,8 +37,7 @@ def output_handler(nickname, instance, output, elapsed):
 
     # Catches any errors in the user-made parsing above
     except (TypeError, NameError, ValueError, IndexError) as e:
-        print(e)
-        # TODO: write to an error logging file instead
+        write_error(nickname, instance, e)
 
     # Passes off info to the schemas file to be written to the database
     finally:

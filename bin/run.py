@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import errno
 import glob
 import progressbar
 import mongoengine
@@ -10,7 +11,6 @@ from multiprocessing import Process
 
 
 def write_config(config):
-
     # convert modules into importable format
     config["schemas"] = config["schemas"].rsplit(".", 1)[0].replace("/", ".")
     for program, handler in config["handlers"].items():
@@ -30,14 +30,13 @@ def write_instances(config, instances):
         stripped_instance = instance.split("/", 1)[1]
 
         if not schemas.Instance.objects(filename=stripped_instance):
-            schemas.Instance.objects(filename=stripped_instance).\
+            schemas.Instance.objects(filename=stripped_instance). \
                 update_one(upsert=True, set__filename=stripped_instance)
 
     mongoengine.connection.disconnect()
 
 
 def collect_handlers(config):
-
     handlers = {}
 
     for program in config["handlers"].items():
@@ -66,14 +65,24 @@ def monitor_database(config, num_instances, num_bench):
             # print(stream.next()["fullDocument"])  TODO: possibly use for live-updating output
 
 
-def run(config_filepath, num_bench):
+def create_error_file():
+    with open("bin/errors.txt", "w") as f:
+        try:
+            f.write("Errors:0")
+        except IOError as exc:
+            if exc.errno != errno.EISDIR:
+                raise
 
+
+def run(config_filepath, num_bench):
     spec = importlib.util.spec_from_file_location("config", config_filepath)
     config_file = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(config_file)
     config = config_file.config
 
     write_config(config)
+
+    create_error_file()
 
     # install_path = config_filepath[:config_filepath.rindex("/aiutare/")+9]
 
@@ -95,6 +104,9 @@ def run(config_filepath, num_bench):
         from bin.bench import bench
         for _ in range(0, num_bench):
             bench(instances, handlers)
+
+    from bin.error_file_writer import read_num_errors
+    read_num_errors()
 
     from bin.analyze import analyze
     analyze()
