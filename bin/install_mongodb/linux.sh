@@ -14,3 +14,22 @@ fi
 
 sudo apt-get update
 sudo apt-get install -y mongodb-org
+
+mongod --dbpath ./results --logpath ./results/log/mongodb.log --replSet monitoring_replSet &
+
+# TODO: try and replace this with something better
+echo "SLEEPING!"
+sleep 5s
+
+return_code=1
+while [[ ${return_code} -ne 0 ]]
+do
+   mongo --eval "rs.initiate()"
+   return_code=$?
+   sleep 0.5s
+done
+
+if pgrep mongod > /dev/null ; then
+   mongo_process=$(pgrep mongod)
+   kill ${mongo_process}
+fi

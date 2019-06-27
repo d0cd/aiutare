@@ -3,7 +3,7 @@ import errno
 
 # Define directory to file locations
 # Backslashes requires two to have one in a string
-path = ".\\Files\\*.cnf"
+path = "categories/sat/instances/**/*.cnf"
 files = glob(path)
 
 # Loop through all the files

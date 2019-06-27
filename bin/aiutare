@@ -11,7 +11,7 @@ def main():
     config_filepath = sys.argv[1]
     num_bench = 1
     if len(sys.argv) > 2:
-        num_bench = sys.argv[2]
+        num_bench = int(sys.argv[2])
 
     run(config_filepath, num_bench)
 

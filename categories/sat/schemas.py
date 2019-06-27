@@ -38,7 +38,7 @@ class Result(Document):
     num_propagations = FloatField()
 
 
-# Formats and writes information to the database:
+# Formats and writes results to the database:
 # ------------------------------------------------
 def write_results(program, nickname, instance, result, elapsed, results_dict=None):
 

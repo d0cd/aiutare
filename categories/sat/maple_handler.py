@@ -17,8 +17,8 @@ def output_handler(nickname, instance, output, elapsed):
         result = output
     elif 'UNKNOWN' in output or 'unknown' in output:
         result = 'unknown'
-    else:
-        print(instance, ': Couldn\'t parse output', file=sys.stderr)
+    # else:
+    #     print(instance, ': Couldn\'t parse output', file=sys.stderr)
 
     results_dict = {}
 
