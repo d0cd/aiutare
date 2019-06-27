@@ -1,5 +1,4 @@
 import os
-import sys
 import importlib
 from bin.config import config
 
@@ -8,34 +7,41 @@ from bin.config import config
 # and extracts useful information
 def output_handler(nickname, instance, output, elapsed):
     result = 'error'
-
-    if 'UNSAT' in output or 'unsat' in output:
-        result = 'unsat'
-    elif 'SAT' in output or 'sat' in output:
-        result = 'sat'
-    elif 'TIMEOUT' in output or 'timeout' in output:
-        result = output
-    elif 'UNKNOWN' in output or 'unknown' in output:
-        result = 'unknown'
-    # else:
-    #     print(instance, ': Couldn\'t parse output', file=sys.stderr)
-
     results_dict = {}
 
-    if result == 'sat':
-        output_string = output.replace(" ", "")
+    try:
+        # Basic parsing for SAT and UNSAT
+        if 'UNSAT' in output or 'unsat' in output:
+            result = 'unsat'
+        elif 'SAT' in output or 'sat' in output:
+            result = 'sat'
+        elif 'TIMEOUT' in output or 'timeout' in output:
+            result = output
+        elif 'UNKNOWN' in output or 'unknown' in output:
+            result = 'unknown'
 
-        names = ["num_variables", "num_clauses", "num_conflicts", "num_decisions", "num_propagations"]
+        # Advanced parsing for feature extraction
+        if result == 'sat':
+            output_string = output.replace(" ", "")
 
-        start_arr = ["Numberofvariables:", "Numberofclauses:", "Conflicts|", "Decisions|", "Propagations|"]
+            names = ["num_variables", "num_clauses", "num_conflicts", "num_decisions", "num_propagations"]
 
-        end_arr = ["|", "|", "|", "|", "|"]
+            start_arr = ["Numberofvariables:", "Numberofclauses:", "Conflicts|", "Decisions|", "Propagations|"]
 
-        for i in range(len(names)):
-            index_start = output_string.index(start_arr[i]) + len(start_arr[i])
-            index_end = index_start + output_string[index_start:].index(end_arr[i])
-            results_dict[names[i]] = float(output_string[index_start:index_end])
+            end_arr = ["|", "|", "|", "|", "|"]
 
-    schemas = importlib.import_module(config["schemas"])
-    schemas.write_results(os.path.basename(__file__).rsplit("_", 1)[0],
-                          nickname, instance, result, elapsed, results_dict)
+            for i in range(len(names)):
+                index_start = output_string.rindex(start_arr[i]) + len(start_arr[i])
+                index_end = index_start + output_string[index_start:].index(end_arr[i])
+                results_dict[names[i]] = float(output_string[index_start:index_end])
+
+    # Catches any errors in the user-made parsing above
+    except (TypeError, NameError, ValueError, IndexError) as e:
+        print(e)
+        # TODO: write to an error logging file instead
+
+    # Passes off info to the schemas file to be written to the database
+    finally:
+        schemas = importlib.import_module(config["schemas"])
+        schemas.write_results(os.path.basename(__file__).rsplit("_", 1)[0],
+                              nickname, instance, result, elapsed, results_dict)

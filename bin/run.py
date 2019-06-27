@@ -82,7 +82,7 @@ def run(config_filepath, num_bench):
 
     if num_bench > 0:
 
-        instances = glob.glob("%s/**/*.*" % config["instances"], recursive=True)
+        instances = glob.glob("%s/**/*.%s" % (config["instances"], config["file_extension"]), recursive=True)
 
         instance_writer = Process(target=write_instances, args=(config, instances))
         instance_writer.start()

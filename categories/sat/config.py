@@ -1,4 +1,5 @@
 config = {
+    "file_extension": "cnf",
     "database_name": "sat_database",
     "timeout": 30.0,
 
