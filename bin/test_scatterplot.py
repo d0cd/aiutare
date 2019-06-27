@@ -39,7 +39,7 @@ for result in schemas.Result.objects():
 data = []
 
 for i in range(len(names)):
-    if len(x_coords)>0:
+    if len(x_coords[i])>0:
         data.append(go.Scatter(
             x=x_coords[i],
             y=y_coords[i],
