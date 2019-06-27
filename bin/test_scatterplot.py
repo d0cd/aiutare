@@ -44,14 +44,24 @@ for i in range(len(names)):
         name=names[i]
     )
 
-# Finish and create graph
-# layout = go.Layout(
-#     barmode='group'
-# )
+layout= go.Layout(
+    hovermode= 'closest',
+    xaxis= dict(
+        title= 'num_propagations',
+        ticklen= 5,
+        zeroline= False,
+        gridwidth= 2,
+    ),
+    yaxis=dict(
+        title= 'time_elapsed',
+        ticklen= 5,
+        gridwidth= 2,
+    )
+)
 
 plotly.offline.plot({
     "data": data,
-    # "layout": layout
+    "layout": layout
 }, auto_open=True, filename="images/testerScatter.html")
 
 mongoengine.connection.disconnect()
