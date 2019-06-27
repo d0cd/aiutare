@@ -5,6 +5,9 @@ import mongoengine
 import plotly
 import plotly.graph_objs as go
 from bin.config import config
+import scipy
+from scipy import stats
+import numpy as np
 
 Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
       " --replSet monitoring_replSet".split())
@@ -34,7 +37,7 @@ for result in schemas.Result.objects():
         y_coords[index].append(result.elapsed)
         x_coords[index].append(result.num_propagations)
 
-data = [None]*len(names)
+data = [None]*(2*len(names))
 
 for i in range(len(names)):
     data[i] = go.Scatter(
@@ -43,6 +46,16 @@ for i in range(len(names)):
         mode='markers',
         name=names[i]
     )
+    slope, intercept, r_value, p_value, std_err = stats.linregress(x_coords[i],y_coords[i])
+    if r_value^2>0.8:
+        data[i+len(names)]= go.Scatter(
+            x=[0.0,1.0],
+            y=[intercept,slope+intercept],
+            mode = 'line',
+            name=(names[i]+"Regression Line")
+        )
+
+
 
 layout= go.Layout(
     hovermode= 'closest',
