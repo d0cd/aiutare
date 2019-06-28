@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import errno
 import glob
+import sys
+import time
 import progressbar
 import mongoengine
 import importlib.util
-import psutil
+import subprocess
 from pymongo import MongoClient
-from subprocess import Popen, DEVNULL
 from multiprocessing import Process
 
 
@@ -23,6 +24,12 @@ def write_config(config):
 
 def write_instances(config, instances):
     schemas = importlib.import_module(config["schemas"])
+
+    code = 1
+    while not code == 0:
+        code = subprocess.run("mongo --eval 'rs.initiate()'".split(),
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
+        time.sleep(.5)
 
     mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
 
@@ -68,13 +75,13 @@ def monitor_database(config, num_instances, num_bench):
 def create_error_file():
     with open("bin/errors.txt", "w") as f:
         try:
-            f.write("Errors:0")
+            f.write("Errors:0\n")
         except IOError as exc:
             if exc.errno != errno.EISDIR:
                 raise
 
 
-def run(config_filepath, num_bench):
+def main(config_filepath, num_bench):
     spec = importlib.util.spec_from_file_location("config", config_filepath)
     config_file = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(config_file)
@@ -86,8 +93,8 @@ def run(config_filepath, num_bench):
 
     # install_path = config_filepath[:config_filepath.rindex("/aiutare/")+9]
 
-    Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
-          " --replSet monitoring_replSet".split(), stdout=DEVNULL)
+    mongod = subprocess.Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
+                              " --replSet monitoring_replSet".split(), stdout=subprocess.DEVNULL)
 
     if num_bench > 0:
 
@@ -103,16 +110,21 @@ def run(config_filepath, num_bench):
 
         from bin.bench import bench
         for _ in range(0, num_bench):
-            bench(instances, handlers)
+            try:
+                bench(instances, handlers)
+            except Exception as e:
+                print("KILLING BENCHMARKING: ", e, file=sys.stderr)
 
-    from bin.error_file_writer import read_num_errors
-    read_num_errors()
+        database_monitor.terminate()
+
+        from bin.error_file_writer import read_num_errors
+        read_num_errors()
 
     from bin.analyze import analyze
     analyze()
 
-    procname = "mongod"
+    mongod.terminate()
 
-    for proc in psutil.process_iter():
-        if proc.name() == procname:
-            proc.kill()
+
+if __name__ == '__main__':
+    main(config_filepath=sys.argv[1], num_bench=1)

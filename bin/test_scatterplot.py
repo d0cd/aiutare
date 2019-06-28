@@ -4,7 +4,6 @@ from subprocess import Popen
 import mongoengine
 import plotly
 import plotly.graph_objs as go
-
 from bin.config import config
 from scipy import stats
 import numpy as np
@@ -122,24 +121,24 @@ def graph_lines():
 
 
 def main():
-    Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
-          " --replSet monitoring_replSet".split())
+    mongod = Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
+                   " --replSet monitoring_replSet".split())
 
     schemas = importlib.import_module(config["schemas"])
     mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
 
-    names = [nickname for programs, specifications in config["commands"].items() for
-             nickname, command in specifications.items()]
+    nicknames = [nickname for programs, specifications in config["commands"].items() for
+                 nickname, command in specifications.items()]
 
-    initialize_coords(names, schemas)
+    initialize_coords(nicknames, schemas)
 
-    for i in range(len(names)):
+    for i in range(len(nicknames)):
         if not (len(X_COORDS[i]) == 0 or not len(X_COORDS[i]) == len(Y_COORDS[i])):
             DATA.append(go.Scatter(
                 x=X_COORDS[i],
                 y=Y_COORDS[i],
                 mode='markers',
-                name=names[i]
+                name=nicknames[i]
             ))
 
             arr_r_squared = [0.0, 0.0, 0.0]
@@ -151,12 +150,18 @@ def main():
             optimal_fit = arr_r_squared.index(max(arr_r_squared))
 
             if optimal_fit == 0:
-                linear_regress(i, names)
+                linear_regress(i, nicknames)
             elif optimal_fit == 1:
-                quadratic_regress(i, names)
+                quadratic_regress(i, nicknames)
             else:
-                exp_regress(i, names)
+                exp_regress(i, nicknames)
 
-            graph_lines()
+    graph_lines()
 
     mongoengine.connection.disconnect()
+
+    mongod.terminate()
+
+
+if __name__ == '__main__':
+    main()

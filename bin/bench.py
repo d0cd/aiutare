@@ -75,6 +75,9 @@ def bench(instances, handlers):
     try:
         with concurrent.futures.ProcessPoolExecutor() as executor:
             executor.map(run_solver, args)
+    except concurrent.futures.process.BrokenProcessPool:
+        print("A benchmarking process has terminated in a non-clean fashion:")
+        print("Please refer to bin/errors.txt")
     except KeyboardInterrupt:
         print('Interrupted!')
         try:
