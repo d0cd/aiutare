@@ -38,6 +38,42 @@ class Result(Document):
     num_propagations = FloatField()
 
 
+# Parses out num_variables and num_clauses from a CNF file header
+# -----------------------------------------------------------------
+def parse_cnf(instance):
+    with open(instance, "r") as f:
+        arr_lines = f.readlines()
+
+        for line in arr_lines:
+            if line[0] == 'p':
+                line_arr = line.split()
+                num_variables = line_arr[2]
+                num_clauses = line_arr[3]
+
+    return num_variables, num_clauses
+
+
+# Formats and writes results to the database:
+# ------------------------------------------------
+def write_instances(instances):
+
+    mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
+
+    for instance in instances:
+        stripped_instance = instance.split("/", 1)[1]
+
+        if not Instance.objects(filename=stripped_instance):
+            num_variables, num_clauses = parse_cnf(instance)
+
+            Instance.objects(filename=stripped_instance). \
+                update_one(upsert=True,
+                           set__filename=stripped_instance,
+                           set__num_variables=num_variables,
+                           set__num_clauses=num_clauses)
+
+    mongoengine.connection.disconnect()
+
+
 # Formats and writes results to the database:
 # ------------------------------------------------
 def write_results(program, nickname, instance, result, elapsed, results_dict=None):

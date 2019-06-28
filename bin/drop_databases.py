@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from subprocess import Popen
 from mongoengine import connect
 from bin.config import config

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import mongoengine
 import importlib
 from subprocess import Popen

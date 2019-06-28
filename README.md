@@ -10,5 +10,5 @@ python3 setup.py install --user
 
 ### Usage
 ```
-aiutare [absolute path to config.json file] [number of runs; 1 if omitted]
+bin/aiutare [absolute path to config.json file] [number of runs; 1 if omitted]
 ```

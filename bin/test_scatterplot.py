@@ -14,9 +14,10 @@ INCLUDE_TIMEOUT = True
 INCLUDE_ERROR = False
 INCLUDE_UNKNOWN = False
 
-AXIS_OPTIONS = ["elapsed", "num_conflicts", "num_decisions", "num_propagations"]
+AXIS_OPTIONS = ["elapsed", "num_conflicts", "num_decisions", "num_propagations",
+                "instance.num_variables", "instance.num_clauses"]
 
-X_AXIS = "num_propagations"
+X_AXIS = "instance.num_variables"
 Y_AXIS = "elapsed"
 
 X_COORDS = []

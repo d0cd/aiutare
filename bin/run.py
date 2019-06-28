@@ -4,7 +4,6 @@ import glob
 import sys
 import time
 import progressbar
-import mongoengine
 import importlib.util
 import subprocess
 from pymongo import MongoClient
@@ -20,27 +19,6 @@ def write_config(config):
     with open("bin/config.py", "w") as file:
         file.write("config = " + str(config) + "\n")
         file.flush()
-
-
-def write_instances(config, instances):
-    schemas = importlib.import_module(config["schemas"])
-
-    code = 1
-    while not code == 0:
-        code = subprocess.run("mongo --eval 'rs.initiate()'".split(),
-                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
-        time.sleep(.5)
-
-    mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
-
-    for instance in instances:
-        stripped_instance = instance.split("/", 1)[1]
-
-        if not schemas.Instance.objects(filename=stripped_instance):
-            schemas.Instance.objects(filename=stripped_instance). \
-                update_one(upsert=True, set__filename=stripped_instance)
-
-    mongoengine.connection.disconnect()
 
 
 def collect_handlers(config):
@@ -81,7 +59,7 @@ def create_error_file():
                 raise
 
 
-def main(config_filepath, num_bench):
+def run(config_filepath, num_bench):
     spec = importlib.util.spec_from_file_location("config", config_filepath)
     config_file = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(config_file)
@@ -96,11 +74,18 @@ def main(config_filepath, num_bench):
     mongod = subprocess.Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
                               " --replSet monitoring_replSet".split(), stdout=subprocess.DEVNULL)
 
+    code = 1
+    while not code == 0:  # Retry connecting to database until it is setup TODO: replace with pymongo.ping
+        code = subprocess.run("mongo --eval 'rs.initiate()'".split(),
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
+        time.sleep(.5)
+
     if num_bench > 0:
 
         instances = glob.glob("%s/**/*.%s" % (config["instances"], config["file_extension"]), recursive=True)
 
-        instance_writer = Process(target=write_instances, args=(config, instances))
+        schemas = importlib.import_module(config["schemas"])
+        instance_writer = Process(target=schemas.write_instances, args=instances)
         instance_writer.start()
         handlers = collect_handlers(config)
         instance_writer.join()
@@ -124,7 +109,3 @@ def main(config_filepath, num_bench):
     analyze()
 
     mongod.terminate()
-
-
-if __name__ == '__main__':
-    main(config_filepath=sys.argv[1], num_bench=1)
