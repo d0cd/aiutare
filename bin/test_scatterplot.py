@@ -9,112 +9,154 @@ from bin.config import config
 from scipy import stats
 import numpy as np
 
-Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
-      " --replSet monitoring_replSet".split())
+INCLUDE_SAT = True
+INCLUDE_UNSAT = True
+INCLUDE_TIMEOUT = True
+INCLUDE_ERROR = False
+INCLUDE_UNKNOWN = False
 
-schemas = importlib.import_module(config["schemas"])
-mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
+AXIS_OPTIONS = ["elapsed", "num_conflicts", "num_decisions", "num_propagations"]
 
-include_sat = True
-include_unsat = True
-include_timeout = True
+X_AXIS = "num_propagations"
+Y_AXIS = "elapsed"
 
-names = ["syrup_stock", 'minisat_stock', 'minisat_clone', 'maple_stock']
+X_COORDS = []
+Y_COORDS = []
 
-y_coords = []
+DATA = []
 
-x_coords = []
 
-for i in range(len(names)):
-    x_coords.append([])
-    y_coords.append([])
+def initialize_coords(names, schemas):
+    for i in range(len(names)):
+        X_COORDS.append([])
+        Y_COORDS.append([])
 
-for result in schemas.Result.objects():
-    index = names.index(result.nickname)
-    if (result.result == "sat" and include_sat) or \
-            (result.result == "unsat" and include_unsat) or \
-            (result.elapsed == config["timeout"] and include_timeout):
-        y_coords[index].append(result.elapsed)
-        x_coords[index].append(result.num_propagations)
-    else:
-        y_coords[index].append(0.0)
-        x_coords[index].append(0)
+    for result in schemas.Result.objects():
+        index = names.index(result.nickname)
+        if (result.result == "sat" and INCLUDE_SAT) or \
+                (result.result == "unsat" and INCLUDE_UNSAT) or \
+                (result.elapsed == config["timeout"] and INCLUDE_TIMEOUT) or \
+                (result.result == "error" and INCLUDE_ERROR) or\
+                (result.result == "unknown" and INCLUDE_UNKNOWN):
+            X_COORDS[index].append(getattr(result, X_AXIS))
+            Y_COORDS[index].append(getattr(result, Y_AXIS))
 
-data = []
-
-for i in range(len(names)):
-    counter = 0
-    while counter < len(x_coords[i]):
-        if x_coords[i][counter] is None or y_coords[i][counter] is None:
-            x_coords[i].pop(counter)
-            y_coords[i].pop(counter)
-        else:
-            counter += 1
-
-for i in range(len(names)):
-    if len(x_coords[i]) > 0 and len(y_coords[i]) > 0:
-        data.append(go.Scatter(
-            x=x_coords[i],
-            y=y_coords[i],
-            mode='markers',
-            name=names[i]
-        ))
-        slope, intercept, r_value, p_value, std_err = stats.linregress(x_coords[i], y_coords[i])
-        if r_value ** 2 > 0.95:
-            data.append(go.Scatter(
-                x=[0.0, max(x_coords[i])],
-                y=[intercept, slope * max(x_coords[i]) + intercept],
-                mode='lines',
-                name=(names[i] + " Regression Line Linear")
-            ))
-        else:
-            slope, intercept, r_value, p_value, std_err = stats.linregress(x_coords[i], np.log(y_coords[i]))
-            if r_value ** 2 > 0.95:
-                x_coords_tmp = np.linspace(0, max(x_coords[i]), 200)
-                y_coords_tmp = np.exp(slope * x_coords_tmp + intercept)
-                data.append(go.Scatter(
-                    x=x_coords_tmp,
-                    y=y_coords_tmp,
-                    mode='lines',
-                    name=(names[i] + " Regression Line Exponential")
-                ))
+    for i in range(len(names)):
+        counter = 0
+        while counter < len(X_COORDS[i]):
+            if X_COORDS[i][counter] is None or Y_COORDS[i][counter] is None:
+                X_COORDS[i].pop(counter)
+                Y_COORDS[i].pop(counter)
             else:
-                z = np.polyfit(x_coords[i], y_coords[i], 2)
-                f = np.poly1d(z)
-                x_coords_tmp = np.linspace(0, max(x_coords[i]), 200)
-                y_coords_tmp = f(x_coords_tmp)
+                counter += 1
 
-                yhat = f(x_coords[i])
-                ybar = np.sum(y_coords[i]) / len(y_coords[i])
-                ssreg = np.sum((yhat - ybar) ** 2)
-                sstot = sum([(yi - ybar)**2 for yi in y_coords[i]])
-                r_squared = ssreg / sstot
 
-                data.append(go.Scatter(
-                    x=x_coords_tmp,
-                    y=y_coords_tmp,
-                    mode='lines',
-                    name=(names[i] + " Regression Line Quadratic")
-                ))
+def quadratic_r_squared(i):
+    z = np.polyfit(X_COORDS[i], Y_COORDS[i], 2)
+    f = np.poly1d(z)
 
-layout = go.Layout(
-    hovermode='closest',
-    xaxis=dict(
-        title='num_propagations',
-        ticklen=5,
-        zeroline=False,
-        gridwidth=2,
-    ),
-    yaxis=dict(
-        title='time_elapsed',
-        ticklen=5,
-        gridwidth=2,
+    yhat = f(X_COORDS[i])
+    ybar = np.sum(Y_COORDS[i]) / len(Y_COORDS[i])
+    ssreg = np.sum((yhat - ybar) ** 2)
+    sstot = sum([(yi - ybar) ** 2 for yi in Y_COORDS[i]])
+    r_squared = ssreg / sstot
+    return r_squared
+
+
+def linear_regress(i, names):
+    slope, intercept, r_value, p_value, std_err = stats.linregress(X_COORDS[i], Y_COORDS[i])
+    DATA.append(go.Scatter(
+        x=[0.0, max(X_COORDS[i])],
+        y=[intercept, slope * max(X_COORDS[i]) + intercept],
+        mode='lines',
+        name=(names[i] + " Regression Line Linear")
+    ))
+
+
+def exp_regress(i, names):
+    slope, intercept, r_value, p_value, std_err = stats.linregress(X_COORDS[i], np.log(Y_COORDS[i]))
+    x_coords_tmp = np.linspace(0, max(X_COORDS[i]), 200)
+    y_coords_tmp = np.exp(slope * x_coords_tmp + intercept)
+    DATA.append(go.Scatter(
+        x=x_coords_tmp,
+        y=y_coords_tmp,
+        mode='lines',
+        name=(names[i] + " Regression Line Exponential")
+    ))
+
+
+def quadratic_regress(i, names):
+    z = np.polyfit(X_COORDS[i], Y_COORDS[i], 2)
+    f = np.poly1d(z)
+    x_coords_tmp = np.linspace(0, max(X_COORDS[i]), 200)
+    y_coords_tmp = f(x_coords_tmp)
+
+    DATA.append(go.Scatter(
+        x=x_coords_tmp,
+        y=y_coords_tmp,
+        mode='lines',
+        name=(names[i] + " Regression Line Quadratic")
+    ))
+
+
+def graph_lines():
+    layout = go.Layout(
+        hovermode='closest',
+        xaxis=dict(
+            title=X_AXIS,
+            ticklen=5,
+            zeroline=False,
+            gridwidth=2,
+        ),
+        yaxis=dict(
+            title=Y_AXIS,
+            ticklen=5,
+            gridwidth=2,
+        )
     )
-)
 
-plotly.offline.plot({
-    "data": data,
-    "layout": layout
-}, auto_open=True, filename="images/testerScatter.html")
+    plotly.offline.plot({
+        "data": DATA,
+        "layout": layout
+    }, auto_open=True, filename="images/testerScatter.html")
 
-mongoengine.connection.disconnect()
+
+def main():
+    Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
+          " --replSet monitoring_replSet".split())
+
+    schemas = importlib.import_module(config["schemas"])
+    mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
+
+    names = [nickname for programs, specifications in config["commands"].items() for
+             nickname, command in specifications.items()]
+
+    initialize_coords(names, schemas)
+
+    for i in range(len(names)):
+        if not (len(X_COORDS[i]) == 0 or not len(X_COORDS[i]) == len(Y_COORDS[i])):
+            DATA.append(go.Scatter(
+                x=X_COORDS[i],
+                y=Y_COORDS[i],
+                mode='markers',
+                name=names[i]
+            ))
+
+            arr_r_squared = [0.0, 0.0, 0.0]
+
+            arr_r_squared[0] = stats.linregress(X_COORDS[i], Y_COORDS[i])[2]
+            arr_r_squared[1] = quadratic_r_squared(i)
+            arr_r_squared[2] = stats.linregress(X_COORDS[i], np.log(Y_COORDS[i]))[2]
+
+            optimal_fit = arr_r_squared.index(max(arr_r_squared))
+
+            if optimal_fit == 0:
+                linear_regress(i, names)
+            elif optimal_fit == 1:
+                quadratic_regress(i, names)
+            else:
+                exp_regress(i, names)
+
+            graph_lines()
+
+    mongoengine.connection.disconnect()
