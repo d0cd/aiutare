@@ -4,5 +4,5 @@
 
 plots
 results
-bin/errors.txt
+benching/errors.txt
 categories/sat/instances/*

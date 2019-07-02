@@ -93,7 +93,7 @@ def run(config_filepath, num_bench):
         database_monitor = Process(target=monitor_database, args=(config, len(instances), num_bench))
         database_monitor.start()
 
-        from bin.bench import bench
+        from benching.bench import bench
         for _ in range(0, num_bench):
             try:
                 bench(instances, handlers)
@@ -102,7 +102,7 @@ def run(config_filepath, num_bench):
 
         database_monitor.terminate()
 
-        from bin.error_file_writer import read_num_errors
+        from benching.error_file_writer import read_num_errors
         read_num_errors()
 
     from bin.analyze import analyze

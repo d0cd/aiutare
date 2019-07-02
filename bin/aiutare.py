@@ -2,8 +2,7 @@
 
 import sys
 
-from bin.run import run
-import argparse
+from benching.run import run
 
 
 def main():

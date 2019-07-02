@@ -2,7 +2,7 @@
 import mongoengine
 import importlib
 from subprocess import Popen, DEVNULL
-from bin.config import config
+from benching.config import config
 schemas = importlib.import_module(config["schemas"])
 
 

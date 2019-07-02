@@ -1,7 +1,7 @@
 import mongoengine
 from mongoengine import *
 import numpy as np
-from bin.config import config
+from benching.config import config
 
 
 # MongoEngine schemas:
