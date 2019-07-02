@@ -17,8 +17,8 @@ def main():
     for Instance in schemas.Instance.objects():
         print(Instance.to_json())
 
-    # for Result in schemas.Result.objects():
-    #     print(Result.to_json())
+    for Result in schemas.Result.objects():
+        print(Result.to_json())
 
     mongoengine.connection.disconnect()
 

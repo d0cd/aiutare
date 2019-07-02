@@ -21,7 +21,6 @@ config = {
             "minisat":
                 {
                     "minisat_stock": "categories/sat/tools/minisat -cpu-lim=33",
-                    "minisat_clone": "categories/sat/tools/minisat -cpu-lim=33"
                 },
             "maple":
                 {

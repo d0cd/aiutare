@@ -22,14 +22,14 @@ def output_handler(nickname, instance, output, elapsed):
             result = 'unknown'
 
         # Advanced parsing for feature extraction
-        if result == 'sat':
+        if result == 'unsat' or result == 'sat':
             output_string = output.replace(" ", "")
 
-            names = ["num_variables", "num_clauses", "num_conflicts", "num_decisions", "num_propagations"]
+            names = ["num_conflicts", "num_decisions", "num_propagations", "memory_used_MB"]
 
-            start_arr = ["Numberofvariables:", "Numberofclauses:", "Conflicts|", "Decisions|", "Propagations|"]
+            start_arr = ["Conflicts|", "Decisions|", "Propagations|", "Memory="]
 
-            end_arr = ["|", "|", "|", "|", "|"]
+            end_arr = ["|", "|", "|", "M"]
 
             for i in range(len(names)):
                 index_start = output_string.rindex(start_arr[i]) + len(start_arr[i])

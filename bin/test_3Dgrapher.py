@@ -10,7 +10,7 @@ from bin.config import config
 
 X_AXIS = "num_propagations"
 Y_AXIS = "elapsed"
-Z_AXIS = "num_conflicts"
+Z_AXIS = "memory_used_MB"
 
 
 mongod = Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
