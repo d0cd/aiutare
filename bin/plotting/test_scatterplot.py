@@ -125,7 +125,7 @@ def graph_lines():
     }, auto_open=True, filename="plots/testerScatter.html")
 
 
-def main():
+def scatterplot():
     mongod = Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
                    " --replSet monitoring_replSet".split(), stdout=DEVNULL)
 
@@ -166,7 +166,3 @@ def main():
     mongoengine.connection.disconnect()
 
     mongod.terminate()
-
-
-if __name__ == '__main__':
-    main()
