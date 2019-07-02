@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import errno
 import glob
 import sys
 import time
@@ -16,7 +15,7 @@ def write_config(config):
     for program, handler in config["handlers"].items():
         config["handlers"][program] = handler.rsplit(".", 1)[0].replace("/", ".")
 
-    with open("bin/config.py", "w") as file:
+    with open("bin/benching/config.py", "w") as file:
         file.write("config = " + str(config) + "\n")
         file.flush()
 
@@ -50,15 +49,6 @@ def monitor_database(config, num_instances, num_bench):
             # print(stream.next()["fullDocument"])  TODO: possibly use for live-updating output
 
 
-def create_error_file():
-    with open("bin/errors.txt", "w") as f:
-        try:
-            f.write("Errors:0\n")
-        except IOError as exc:
-            if exc.errno != errno.EISDIR:
-                raise
-
-
 def run(config_filepath, num_bench):
     spec = importlib.util.spec_from_file_location("config", config_filepath)
     config_file = importlib.util.module_from_spec(spec)
@@ -66,8 +56,6 @@ def run(config_filepath, num_bench):
     config = config_file.config
 
     write_config(config)
-
-    create_error_file()
 
     # install_path = config_filepath[:config_filepath.rindex("/aiutare/")+9]
 
@@ -93,7 +81,7 @@ def run(config_filepath, num_bench):
         database_monitor = Process(target=monitor_database, args=(config, len(instances), num_bench))
         database_monitor.start()
 
-        from benching.bench import bench
+        from bin.benching.bench import bench
         for _ in range(0, num_bench):
             try:
                 bench(instances, handlers)
@@ -102,7 +90,7 @@ def run(config_filepath, num_bench):
 
         database_monitor.terminate()
 
-        from benching.error_file_writer import read_num_errors
+        from bin.benching.error_file_writer import read_num_errors
         read_num_errors()
 
     from bin.analyze import analyze

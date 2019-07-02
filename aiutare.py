@@ -2,7 +2,7 @@
 
 import sys
 
-from benching.run import run
+from bin.benching.run import run
 
 
 def main():

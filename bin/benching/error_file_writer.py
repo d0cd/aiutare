@@ -1,6 +1,6 @@
 import time
 
-FILENAME = "bin/errors.txt"
+FILENAME = "bin/benching/errors.txt"
 
 
 def write_error(solver, instance, error):

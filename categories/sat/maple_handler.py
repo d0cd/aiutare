@@ -1,7 +1,7 @@
 import os
 import importlib
-from benching.config import config
-from benching.error_file_writer import write_error
+from bin.benching.config import config
+from bin.benching.error_file_writer import write_error
 
 
 # Parses the stdout + stderr output from running the problem

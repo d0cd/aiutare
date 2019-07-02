@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from subprocess import Popen, DEVNULL
 from mongoengine import connect
-from benching.config import config
+from bin.benching.config import config
 
 mongod = Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
                " --replSet monitoring_replSet".split(), stdout=DEVNULL)

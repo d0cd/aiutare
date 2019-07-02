@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import importlib
-from benching.config import config
+from bin.benching.config import config
 
 
 # AGGREGATION FUNCTIONS

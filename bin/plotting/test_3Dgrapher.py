@@ -5,7 +5,7 @@ import mongoengine
 import plotly
 import plotly.graph_objs as go
 from operator import attrgetter
-from benching.config import config
+from bin.benching.config import config
 
 
 X_AXIS = "num_propagations"

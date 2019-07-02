@@ -4,7 +4,7 @@ from subprocess import Popen, DEVNULL
 import mongoengine
 import plotly
 import plotly.graph_objs as go
-from benching.config import config
+from bin.benching.config import config
 from scipy import stats
 from operator import attrgetter
 import numpy as np

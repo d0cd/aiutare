@@ -5,7 +5,7 @@ import subprocess
 import signal
 import datetime
 import concurrent.futures
-from benching.config import config
+from bin.benching.config import config
 
 
 def run_problem(program, nickname, command, instance):
