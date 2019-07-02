@@ -25,11 +25,13 @@ def output_handler(nickname, instance, output, elapsed):
         if result == 'unsat' or result == 'sat':
             output_string = output.replace(" ", "")
 
-            names = ["num_variables", "num_clauses", "num_conflicts", "num_decisions", "num_propagations"]
+            names = ["num_variables", "num_clauses", "num_conflicts", "num_decisions", "num_propagations",
+                     "memory_used_MB"]
 
-            start_arr = ["Numberofvariables:", "Numberofclauses:", "conflicts:", "decisions:", "propagations:"]
+            start_arr = ["Numberofvariables:", "Numberofclauses:", "conflicts:", "decisions:", "propagations:",
+                         "Memoryused:"]
 
-            end_arr = ["|", "|", "(", "(", "("]
+            end_arr = ["|", "|", "(", "(", "(", "M"]
 
             for i in range(len(names)):
                 index_start = output_string.index(start_arr[i]) + len(start_arr[i])

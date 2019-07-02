@@ -32,10 +32,11 @@ class Result(Document):
     result = StringField(required=True)
     elapsed = FloatField(required=True)
 
-    # Information gathered from MiniSAT output
+    # Information extracted from program output
     num_conflicts = FloatField()
     num_decisions = FloatField()
     num_propagations = FloatField()
+    memory_used_MB = FloatField()
 
 
 # Parses out num_variables and num_clauses from a CNF file header
@@ -92,6 +93,7 @@ def write_results(program, nickname, instance, result, elapsed, results_dict=Non
         this_result.num_conflicts = results_dict["num_conflicts"]
         this_result.num_decisions = results_dict["num_decisions"]
         this_result.num_propagations = results_dict["num_propagations"]
+        this_result.memory_used_MB = results_dict["memory_used_MB"]
 
     this_result.save(force_insert=True)
 

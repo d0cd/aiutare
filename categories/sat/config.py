@@ -16,16 +16,16 @@ config = {
         {
             "syrup":
                 {
-                    "syrup_stock": "categories/sat/tools/syrup/syrup/bin/glucose-syrup -nthreads=8 -maxmemory=50000 -cpu-lim=33"
+                    "syrup_stock": "categories/sat/tools/syrupsat -nthreads=8 -maxmemory=50000 -cpu-lim=33"
                 },
             "minisat":
                 {
-                    "minisat_stock": "minisat -cpu-lim=33",
-                    "minisat_clone": "minisat -cpu-lim=33"
+                    "minisat_stock": "categories/sat/tools/minisat -cpu-lim=33",
+                    "minisat_clone": "categories/sat/tools/minisat -cpu-lim=33"
                 },
             "maple":
                 {
-                    "maple_stock": "categories/sat/tools/maple/MapleLRB_LCMoccRestart/sources/simp/glucose_static -cpu-lim=33"
+                    "maple_stock": "categories/sat/tools/maplesat -cpu-lim=33"
                 }
         }
 }

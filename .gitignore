@@ -5,7 +5,4 @@
 plots
 results
 bin/errors.txt
-
-aiutare.egg-info
-build
-dist
+categories/sat/instances/*
