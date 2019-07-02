@@ -54,6 +54,6 @@ layout = go.Layout(
 plotly.offline.plot({
     "data": data,
     "layout": layout
-}, auto_open=True, filename="images/tester.html")
+}, auto_open=True, filename="plots/tester.html")
 
 mongoengine.connection.disconnect()

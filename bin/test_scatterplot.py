@@ -122,7 +122,7 @@ def graph_lines():
     plotly.offline.plot({
         "data": DATA,
         "layout": layout
-    }, auto_open=True, filename="images/testerScatter.html")
+    }, auto_open=True, filename="plots/testerScatter.html")
 
 
 def main():

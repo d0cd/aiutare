@@ -1,80 +1,15 @@
 #!/usr/bin/env python3
-import time
 import importlib
-import numpy as np
-import matplotlib.pyplot as plt
 from bin.config import config
 
 
-# PLOTTING HELPERS
-
-def scatter_plot(ax, x_data, y_data, label):
-    # Plot the data, set the size (s), color and transparency (alpha) of the points
-    ax.scatter(x_data, y_data, s=10, alpha=0.75, label=label)
+# AGGREGATION FUNCTIONS
 
 
-def grouped_bar_plot(ax, x_data, y_data_list, y_data_names):
-    # Total width for all bars at one x location
-    total_width = 0.8
-    # Width of each individual bar
-    ind_width = total_width / len(y_data_list)
-    # This centers each cluster of bars about the x tick mark
-    alteration = np.arange(-(total_width / 2), total_width / 2, ind_width)
-
-    # Draw bars, one category at a time
-    for i in range(0, len(y_data_list)):
-        # Move the bar to the right on the x-axis so it doesn't
-        # overlap with previously drawn ones
-        ax.bar(x_data + alteration[i], y_data_list[i], label=y_data_names[i], width=ind_width)
-
-
-# PLOTTING FUNCTIONS
-
-def plot_cactus(data, name, show_date=False, yscale_log=True, out_type="pdf"):
-    x_label = "Instance #"
-    y_label = "Time (s)"
-    title = "Cactus: %s" % " vs. ".join(solver for solver in data.keys())
-
-    if show_date:
-        title += " (%s)" % time.strftime("%d/%m/%Y")
-
-    # Create the plot object
-    fig, ax = plt.subplots()
-
-    if yscale_log:
-        ax.set_yscale('log')
-
-    # Label the axes and provide a title
-    ax.set_title(title)
-    ax.set_xlabel(x_label)
-    ax.set_ylabel(y_label)
-
-    for solver, runs in data.items():
-        flt = [r[-1] for r in runs if r[1] in ['sat', 'unsat']]
-        scatter_plot(ax, list(range(len(flt))), sorted(flt), solver)
-
-    ax.legend()
-    fig.savefig("%s/%s" % ("images/", "%s.%s" % (name, out_type)), bbox_inches='tight')
-    plt.close(fig)
-
-
-def plot_times(data, name, average=True, include_overall=False, show_date=False, out_type="pdf"):
-    y_label = "Average Time (s)" if average else "Time (s)"
-    title = "Times: %s" % " vs. ".join(solver for solver in data.keys())
-
-    if show_date:
-        title += " (%s)" % time.strftime("%d/%m/%Y")
-
-    # Create the plot object
-    fig, ax = plt.subplots()
-
-    # Label the axes and provide a title
-    ax.set_title(title)
-    ax.set_ylabel(y_label)
+def aggregate_times(data, average=True, include_overall=False):
 
     choices = ["sat", "unsat", "unknown", "error", "overall"]
     choices = choices if include_overall else choices[:-1]
-    x_data = list(range(len(choices)))
     y_data_list = []
     solvers = []
 
@@ -92,45 +27,18 @@ def plot_times(data, name, average=True, include_overall=False, show_date=False,
 
         y_data_list.append(times if include_overall else times[:-1])
 
-    grouped_bar_plot(ax, x_data, y_data_list, solvers)
-    ax.set_xticklabels(choices)
-    ax.set_xticks(list(range(len(choices))))
-    ax.legend()
-    fig.savefig("%s/%s" % ("images/", "%s.%s" % (name, out_type)), bbox_inches='tight')
-    plt.close(fig)
-
     print_times(average, choices, solvers, y_data_list)
 
 
-def plot_counts(data, name, show_date=False, out_type="pdf"):
-    y_label = "# Occurences"
-    title = "Counts: %s" % " vs. ".join(solver for solver in data.keys())
-
-    if show_date:
-        title += " (%s)" % time.strftime("%d/%m/%Y")
-
-    # Create the plot object
-    fig, ax = plt.subplots()
-
-    # Label the axes and provide a title
-    ax.set_title(title)
-    ax.set_ylabel(y_label)
+def aggregate_counts(data):
 
     choices = ["sat", "unsat", "unknown", "timeout", "error"]
-    x_data = list(range(len(choices)))
     counts = []
     solvers = []
 
     for solver, runs in data.items():
         solvers.append(solver)
         counts.append(count_results(runs))
-
-    grouped_bar_plot(ax, x_data, counts, solvers)
-    ax.set_xticklabels(choices)
-    ax.set_xticks(list(range(len(choices))))
-    ax.legend()
-    fig.savefig("%s/%s" % ("images/", "%s.%s" % (name, out_type)), bbox_inches='tight')
-    plt.close(fig)
 
     print_counts(choices, solvers, counts)
 
@@ -241,6 +149,5 @@ def analyze():
     data = import_category()
 
     check_consensus(data)
-    plot_cactus(data, "overall_cactus")
-    plot_counts(data, "overall_counts")
-    plot_times(data, "overall_times")
+    aggregate_counts(data)
+    aggregate_times(data)
