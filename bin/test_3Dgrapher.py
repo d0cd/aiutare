@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 import importlib
-from subprocess import Popen
+from subprocess import Popen, DEVNULL
 import mongoengine
 import plotly
 import plotly.graph_objs as go
+from operator import attrgetter
 from bin.config import config
-from scipy import stats
-import numpy as np
 
-Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
-      " --replSet monitoring_replSet".split())
+
+X_AXIS = "num_propagations"
+Y_AXIS = "elapsed"
+Z_AXIS = "num_conflicts"
+
+
+mongod = Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
+               " --replSet monitoring_replSet".split(), stdout=DEVNULL)
 
 schemas = importlib.import_module(config["schemas"])
 mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
@@ -29,19 +34,23 @@ for i in range(len(names)):
     y_coords.append([])
     z_coords.append([])
 
+x_parser = attrgetter(X_AXIS)
+y_parser = attrgetter(Y_AXIS)
+z_parser = attrgetter(Z_AXIS)
 
 for result in schemas.Result.objects():
     index = names.index(result.nickname)
-    if (result.result == "sat" and include_sat) or (result.result == "unsat" and include_unsat) or (result.elapsed ==
-    config["timeout"] and include_timeout):
-        y_coords[index].append(result.elapsed)
-        x_coords[index].append(result.num_propagations)
-        z_coords[index].append(result.num_conflicts)
+    if (result.result == "sat" and include_sat) or \
+            (result.result == "unsat" and include_unsat) or \
+            (result.elapsed == config["timeout"] and include_timeout):
+        x_coords[index].append(x_parser(result))
+        y_coords[index].append(y_parser(result))
+        z_coords[index].append(z_parser(result))
 
 data = []
 
 for i in range(len(names)):
-    if len(x_coords[i])>0:
+    if len(x_coords[i]) > 0:
         data.append(go.Scatter3d(
             x=x_coords[i],
             y=y_coords[i],
@@ -50,25 +59,21 @@ for i in range(len(names)):
             name=names[i]
         ))
 
-
-layout= go.Layout(
-    hovermode= 'closest',
-    xaxis= dict(
-        title= 'num_propagations',
-        ticklen= 5,
-        zeroline= False,
-        gridwidth= 2,
-    ),
-    yaxis=dict(
-        title= 'time_elapsed',
-        ticklen= 5,
-        gridwidth= 2,
-    )
+layout = go.Layout(
+    scene=dict(
+        xaxis=dict(
+            title=X_AXIS),
+        yaxis=dict(
+            title=Y_AXIS),
+        zaxis=dict(
+            title=Z_AXIS), ),
 )
 
 plotly.offline.plot({
     "data": data,
     "layout": layout
-}, auto_open=True, filename="images/testerScatter.html")
+}, auto_open=True, filename="images/testerScatter3D.html")
 
 mongoengine.connection.disconnect()
+
+mongod.terminate()
