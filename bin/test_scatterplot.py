@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 import importlib
-from subprocess import Popen
+from subprocess import Popen, DEVNULL
 import mongoengine
 import plotly
 import plotly.graph_objs as go
 from bin.config import config
 from scipy import stats
+from operator import attrgetter
 import numpy as np
 
 INCLUDE_SAT = True
@@ -31,6 +32,9 @@ def initialize_coords(names, schemas):
         X_COORDS.append([])
         Y_COORDS.append([])
 
+    x_parser = attrgetter(X_AXIS)
+    y_parser = attrgetter(Y_AXIS)
+
     for result in schemas.Result.objects():
         index = names.index(result.nickname)
         if (result.result == "sat" and INCLUDE_SAT) or \
@@ -38,8 +42,8 @@ def initialize_coords(names, schemas):
                 (result.elapsed == config["timeout"] and INCLUDE_TIMEOUT) or \
                 (result.result == "error" and INCLUDE_ERROR) or\
                 (result.result == "unknown" and INCLUDE_UNKNOWN):
-            X_COORDS[index].append(getattr(result, X_AXIS))
-            Y_COORDS[index].append(getattr(result, Y_AXIS))
+            X_COORDS[index].append(x_parser(result))
+            Y_COORDS[index].append(y_parser(result))
 
     for i in range(len(names)):
         counter = 0
@@ -123,7 +127,7 @@ def graph_lines():
 
 def main():
     mongod = Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
-                   " --replSet monitoring_replSet".split())
+                   " --replSet monitoring_replSet".split(), stdout=DEVNULL)
 
     schemas = importlib.import_module(config["schemas"])
     mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")

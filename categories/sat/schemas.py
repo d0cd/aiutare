@@ -56,7 +56,6 @@ def parse_cnf(instance):
 # Formats and writes results to the database:
 # ------------------------------------------------
 def write_instances(instances):
-
     mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
 
     for instance in instances:

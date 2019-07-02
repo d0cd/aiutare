@@ -85,7 +85,7 @@ def run(config_filepath, num_bench):
         instances = glob.glob("%s/**/*.%s" % (config["instances"], config["file_extension"]), recursive=True)
 
         schemas = importlib.import_module(config["schemas"])
-        instance_writer = Process(target=schemas.write_instances, args=instances)
+        instance_writer = Process(target=schemas.write_instances, args=[instances])
         instance_writer.start()
         handlers = collect_handlers(config)
         instance_writer.join()

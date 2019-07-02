@@ -9,6 +9,6 @@ mongod = Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".s
 db1 = connect(config["database_name"], replicaset="monitoring_replSet")
 db1.drop_database(config["database_name"])
 
-procname = "mongod"
+print("Database '%s' successfully dropped" % config["database_name"])
 
 mongod.terminate()
