@@ -17,6 +17,7 @@ config = {
                 {
                     "z3_master": "categories/smt/tools/z3_master smt.string_solver=z3str3 -T:33 dump_models=true",
                     "z3_federico": "categories/smt/tools/z3_federico smt.string_solver=z3str3 -T:33 dump_models=true",
+                    "z3_seq": "categories/smt/tools/z3_federico smt.string_solver=seq -T:33 dump_models=true",
                 },
             "cvc4":
                 {

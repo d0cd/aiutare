@@ -8,6 +8,7 @@ from bin.benching.error_file_writer import write_error
 # and extracts useful information
 def output_handler(nickname, instance, output, elapsed):
     result = 'error'
+    model = None
 
     try:
         # Basic parsing for SAT and UNSAT
@@ -21,6 +22,8 @@ def output_handler(nickname, instance, output, elapsed):
             result = 'unknown'
 
         # Advanced parsing for feature extraction
+        if result == "sat":
+            model = output.split('\n', 1)[1]
 
     # Catches any errors in the user-made parsing above
     except Exception as e:
@@ -31,4 +34,4 @@ def output_handler(nickname, instance, output, elapsed):
     finally:
         schemas = importlib.import_module(config["schemas"])
         schemas.write_results(os.path.basename(__file__).rsplit("_", 1)[0],
-                              nickname, instance, result, elapsed)
+                              nickname, instance, result, elapsed, model)
