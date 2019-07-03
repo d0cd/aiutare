@@ -1,11 +1,15 @@
+#!/usr/bin/env python3
 import mongoengine
 import importlib
-
-from bin.config import config
+from subprocess import Popen, DEVNULL
+from bin.benching.config import config
 schemas = importlib.import_module(config["schemas"])
 
 
 def main():
+    mongod = Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
+                   " --replSet monitoring_replSet".split(), stdout=DEVNULL)
+
     mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
     print("%d Instances found" % len(schemas.Instance.objects()))
     print("%d Results found" % len(schemas.Result.objects()))
@@ -17,6 +21,8 @@ def main():
         print(Result.to_json())
 
     mongoengine.connection.disconnect()
+
+    mongod.terminate()
 
 
 if __name__ == '__main__':

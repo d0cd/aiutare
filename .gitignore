@@ -1,8 +1,8 @@
 .vscode
 .idea
 .directory
-images
+
+plots
 results
-bin/config.py
-bin/written_instances.json
-bin/sat/instances
+benching/errors.txt
+categories/sat/instances/*
