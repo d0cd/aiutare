@@ -5,4 +5,4 @@
 plots
 results
 benching/errors.txt
-categories/sat/instances/*
+categories/smt/instances/*

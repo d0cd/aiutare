@@ -15,12 +15,12 @@ config = {
         {
             "z3":
                 {
-                    "z3_master": "categories/smt/tools/z3_master smt.string_solver=z3str3 -T:33",
-                    "z3_federico": "categories/smt/tools/z3_federico smt.string_solver=z3str3 -T:33",
+                    "z3_master": "categories/smt/tools/z3_master smt.string_solver=z3str3 -T:33 dump_models=true",
+                    "z3_federico": "categories/smt/tools/z3_federico smt.string_solver=z3str3 -T:33 dump_models=true",
                 },
             "cvc4":
                 {
-                    "cvc4_models": "categories/smt/tools/cvc4 --lang smt --strings-exp --tlimit=33000 -q --produce-models",
+                    "cvc4_models": "categories/smt/tools/cvc4 --lang smt --strings-exp --tlimit=33000 -q --dump-models",
                     "cvc4_no_models": "categories/smt/tools/cvc4 --lang smt --strings-exp --tlimit=33000 -q",
                 }
         }
