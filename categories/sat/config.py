@@ -16,7 +16,7 @@ config = {
         {
             "syrup":
                 {
-                    "syrup_stock": "categories/sat/tools/syrupsat -nthreads=8 -maxmemory=50000 -cpu-lim=33"
+                    "syrup_stock": "categories/sat/tools/syrupsat -nthreads=1 -cpu-lim=33"
                 },
             "minisat":
                 {

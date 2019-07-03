@@ -7,6 +7,7 @@ import importlib.util
 import subprocess
 from pymongo import MongoClient
 from multiprocessing import Process
+from bin.benching.error_file_writer import read_num_errors, create_error_file
 
 
 def write_config(config):
@@ -56,11 +57,7 @@ def run(config_filepath, num_bench):
     config = config_file.config
 
     write_config(config)
-
-    # install_path = config_filepath[:config_filepath.rindex("/aiutare/")+9]
-
-    mongod = subprocess.Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
-                              " --replSet monitoring_replSet".split(), stdout=subprocess.DEVNULL)
+    create_error_file()
 
     code = 1
     while not code == 0:  # Retry connecting to database until it is setup TODO: replace with pymongo.ping
@@ -90,10 +87,7 @@ def run(config_filepath, num_bench):
 
         database_monitor.terminate()
 
-        from bin.benching.error_file_writer import read_num_errors
         read_num_errors()
 
     from bin.analyze import analyze
     analyze()
-
-    mongod.terminate()

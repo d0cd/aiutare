@@ -12,18 +12,15 @@ X_AXIS = "num_propagations"
 Y_AXIS = "elapsed"
 Z_AXIS = "memory_used_MB"
 
+INCLUDE_SAT = True
+INCLUDE_UNSAT = True
+INCLUDE_TIMEOUT = True
+
 
 def scatterplot_3d():
 
-    mongod = Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
-                   " --replSet monitoring_replSet".split(), stdout=DEVNULL)
-
     schemas = importlib.import_module(config["schemas"])
     mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
-
-    include_sat = True
-    include_unsat = True
-    include_timeout = True
 
     names = ["syrup_stock", 'minisat_stock', 'minisat_clone', 'maple_stock']
 
@@ -42,9 +39,9 @@ def scatterplot_3d():
 
     for result in schemas.Result.objects():
         index = names.index(result.nickname)
-        if (result.result == "sat" and include_sat) or \
-                (result.result == "unsat" and include_unsat) or \
-                (result.elapsed == config["timeout"] and include_timeout):
+        if (result.result == "sat" and INCLUDE_SAT) or \
+                (result.result == "unsat" and INCLUDE_UNSAT) or \
+                (result.elapsed == config["timeout"] and INCLUDE_TIMEOUT):
             x_coords[index].append(x_parser(result))
             y_coords[index].append(y_parser(result))
             z_coords[index].append(z_parser(result))
@@ -77,5 +74,3 @@ def scatterplot_3d():
     }, auto_open=True, filename="plots/testerScatter3D.html")
 
     mongoengine.connection.disconnect()
-
-    mongod.terminate()

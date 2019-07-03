@@ -126,8 +126,6 @@ def graph_lines():
 
 
 def scatterplot():
-    mongod = Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
-                   " --replSet monitoring_replSet".split(), stdout=DEVNULL)
 
     schemas = importlib.import_module(config["schemas"])
     mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
@@ -164,5 +162,3 @@ def scatterplot():
     graph_lines()
 
     mongoengine.connection.disconnect()
-
-    mongod.terminate()
