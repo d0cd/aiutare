@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import importlib
-from subprocess import Popen, DEVNULL
 import mongoengine
 import plotly
 import plotly.graph_objs as go
@@ -10,16 +9,23 @@ from operator import attrgetter
 import numpy as np
 
 INCLUDE_SAT = True
-INCLUDE_UNSAT = True
-INCLUDE_TIMEOUT = True
+INCLUDE_UNSAT = False
+INCLUDE_TIMEOUT = False
 INCLUDE_ERROR = False
 INCLUDE_UNKNOWN = False
 
-AXIS_OPTIONS = ["elapsed", "num_conflicts", "num_decisions", "num_propagations",
-                "instance.num_variables", "instance.num_clauses"]
+AXIS_OPTIONS = ["elapsed", "nickname"]
 
-X_AXIS = "instance.num_variables"
+X_AXIS = "nickname"
 Y_AXIS = "elapsed"
+
+NICKNAME_VALS = {
+    "z3_master": 1,
+    "z3_federico": 2,
+    "z3_seq": 3,
+    "cvc4_models": 4,
+    "cvc4_no_models": 5,
+}
 
 X_COORDS = []
 Y_COORDS = []
@@ -42,7 +48,8 @@ def initialize_coords(names, schemas):
                 (result.elapsed == config["timeout"] and INCLUDE_TIMEOUT) or \
                 (result.result == "error" and INCLUDE_ERROR) or\
                 (result.result == "unknown" and INCLUDE_UNKNOWN):
-            X_COORDS[index].append(x_parser(result))
+            # X_COORDS[index].append(x_parser(result))
+            X_COORDS[index].append(NICKNAME_VALS[x_parser(result)])
             Y_COORDS[index].append(y_parser(result))
 
     for i in range(len(names)):

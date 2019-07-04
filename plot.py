@@ -13,7 +13,7 @@ def main():
                    " --replSet monitoring_replSet".split(), stdout=DEVNULL)
 
     scatterplot()
-    scatterplot_3d()
+    # scatterplot_3d()
 
     mongod.terminate()
 
