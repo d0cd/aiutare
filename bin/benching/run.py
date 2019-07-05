@@ -57,7 +57,6 @@ def run(config_filepath, num_bench):
     config = config_file.config
 
     write_config(config)
-    create_error_file()
 
     code = 1
     while not code == 0:  # Retry connecting to database until it is setup TODO: replace with pymongo.ping
@@ -66,6 +65,8 @@ def run(config_filepath, num_bench):
         time.sleep(.5)
 
     if num_bench > 0:
+
+        create_error_file()
 
         instances = glob.glob("%s/**/*.%s" % (config["instances"], config["file_extension"]), recursive=True)
 
