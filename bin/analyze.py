@@ -29,14 +29,11 @@ def update_consensus(result, consensus_dict, nickname_index):
 
 
 def update_counts(result, counts_dict):
-    if "timeout" in result.result:
-        counts_dict[result.nickname][COUNTS_INDEX["timeout"]] += 1
-    else:
-        counts_dict[result.nickname][COUNTS_INDEX[result.result]] += 1
+    counts_dict[result.nickname][COUNTS_INDEX[result.result]] += 1
 
 
 def update_times(result, times_dict):
-    if "timeout" not in result.result:
+    if result.result != "timeout":
         times_dict[result.nickname][TIME_INDEX[result.result]] += result.elapsed
 
     times_dict[result.nickname][TIME_INDEX["overall"]] += result.elapsed

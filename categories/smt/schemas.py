@@ -1,6 +1,5 @@
 import mongoengine
 from mongoengine import *
-import numpy as np
 from bin.benching.config import config
 
 
