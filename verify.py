@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-import importlib
+
 import mongoengine
 import shutil
-from subprocess import Popen, DEVNULL
 from bin.benching.run import run
 from bin.benching.config import config as og_config
 from bin.verification.v_config import v_config
 from categories.smt.schemas import Result, Instance
+from bin.mongod_manager import start_server, end_server
 
 
 def modify_instance(nickname, filename, model):
@@ -33,8 +33,7 @@ def generate_v_instances():
 
 
 def main():
-    mongod = Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
-                   " --replSet monitoring_replSet".split(), stdout=DEVNULL)
+    start_server()
 
     try:
         v_db = mongoengine.connect(v_config["database_name"], replicaset="monitoring_replSet")
@@ -45,8 +44,12 @@ def main():
         # run("bin/verification/v_config.py", 1)
 
     except Exception as e:
-        mongod.terminate()
         print(e)
+
+    finally:
+        kill_server = False  # TODO: handle with argparse
+        if kill_server:
+            end_server()
 
 
 if __name__ == '__main__':

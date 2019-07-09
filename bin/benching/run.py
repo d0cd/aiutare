@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 import glob
 import sys
-import time
 import progressbar
 import importlib.util
-import subprocess
 from pymongo import MongoClient
 from multiprocessing import Process
 from bin.benching.error_file_writer import read_num_errors, create_error_file
@@ -57,12 +55,6 @@ def run(config_filepath, num_bench):
     config = config_file.config
 
     write_config(config)
-
-    code = 1
-    while not code == 0:  # Retry connecting to database until it is setup TODO: replace with pymongo.ping
-        code = subprocess.run("mongo --eval 'rs.initiate()'".split(),
-                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
-        time.sleep(.5)
 
     if num_bench > 0:
 
