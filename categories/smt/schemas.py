@@ -11,6 +11,9 @@ class Instance(Document):
     num_sat = IntField(default=0)
     num_unsat = IntField(default=0)
     num_unknown = IntField(default=0)
+    verified_sat = BooleanField(default=False)
+    # If a solver returns a model for this Instance which ALL solvers find to be "sat",
+    # then we assume that this Instance is proven "sat"
 
     meta = {
         'indexes': [
@@ -27,8 +30,8 @@ class Result(Document):
     elapsed = FloatField(required=True)
     model = StringField()
     verified = StringField(choices=("YES", "NO", "N/A"))
-    # YES means that the model is SAT according to all solvers
-    # NO means that at least one solver returned UNSAT on the model
+    # YES means that "result" has been verified (if "sat") or not yet disproved (if "unsat")
+    # NO means that "result" has been disproved
     # N/A means that the model has not been verified or disproved yet
 
 
@@ -38,13 +41,11 @@ def write_instances(instances):
     mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
 
     for instance in instances:
-        stripped_instance = instance.split("/", 1)[1]
+        if not Instance.objects(filename=instance):
 
-        if not Instance.objects(filename=stripped_instance):
-
-            Instance.objects(filename=stripped_instance). \
+            Instance.objects(filename=instance). \
                 update_one(upsert=True,
-                           set__filename=stripped_instance)
+                           set__filename=instance)
 
     mongoengine.connection.disconnect()
 
@@ -55,8 +56,7 @@ def write_results(program, nickname, instance, result, elapsed, model):
 
     mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
 
-    split_filename = instance.split("/", 1)[1]
-    this_instance = Instance.objects.get(filename=split_filename)
+    this_instance = Instance.objects.get(filename=instance)
 
     this_result = Result(program=program)
     this_result.nickname = nickname
@@ -67,7 +67,7 @@ def write_results(program, nickname, instance, result, elapsed, model):
     # For model verification
     if model:
         this_result.model = model
-        this_result.verified = "N/A"
+    this_result.verified = "N/A"
 
     this_result.save(force_insert=True)
 

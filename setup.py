@@ -25,10 +25,14 @@ def main():
     os.makedirs("results/log", exist_ok=True)
     os.makedirs("plots", exist_ok=True)
 
+    os.makedirs("bin/verification/v_results/log", exist_ok=True)
+
     uid = os.getuid()
     os.chown("results", uid, -1)
     os.chown("results/log", uid, -1)
     os.chown("plots", uid, -1)
+
+    os.chown("bin/verification/v_instances", uid, -1)
 
     print("Calling correct OS MongoDB install script")
     operating_system = platform.system()

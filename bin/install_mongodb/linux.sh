@@ -17,14 +17,12 @@ sudo apt-get install -y mongodb-org
 
 mongod --dbpath ./results --logpath ./results/log/mongodb.log --replSet monitoring_replSet &
 
-# TODO: try and replace this with something better
-echo "SLEEPING!"
-sleep 5s
+sleep 1s
 
 return_code=1
 while [[ ${return_code} -ne 0 ]]
 do
-   mongo --eval "rs.initiate()"
+   mongo --eval "rs.initiate()" 2>/dev/null
    return_code=$?
    sleep 0.5s
 done

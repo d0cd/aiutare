@@ -6,3 +6,5 @@ plots
 results
 bin/benching/errors.txt
 categories/smt/instances/*
+
+bin/verification/v_instances/*
