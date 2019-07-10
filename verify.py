@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import os
 import mongoengine
 import shutil
 from bin.benching.run import run
@@ -10,12 +10,20 @@ from bin.mongod_manager import start_server, end_server
 
 
 def modify_instance(nickname, filename, model):
-    new_filename = v_config["instances"] + "/" + filename.rsplit('.', 1)[0] + "-" + nickname + ".smt2"
-    shutil.copy(filename, new_filename)
+    new_dir = v_config["instances"] + "/" + nickname
+    new_filename = new_dir + "/" + filename.rsplit('/', 1)[1]
 
-    with open(new_filename, 'a') as v_inst:
-        v_inst.write('\n')
-        v_inst.write(model)
+    try:
+        shutil.copy(filename, new_filename)
+
+    except FileNotFoundError:
+        os.makedirs(new_dir, exist_ok=True)
+        shutil.copy(filename, new_filename)
+
+    finally:
+        with open(new_filename, 'a') as v_inst:
+            v_inst.write("\nMODEL BELOW:\n\n")
+            v_inst.write(model)
 
 
 # Populate bin/verification/v_instances with new instances
@@ -23,9 +31,9 @@ def modify_instance(nickname, filename, model):
 def generate_v_instances():
     mongoengine.connect(og_config["database_name"], replicaset="monitoring_replSet")
 
-    all_results = Result.objects()
+    # TODO: should also probably delete all files in v_instances
 
-    for sat_result in all_results:  # TODO: this is being skipped over
+    for sat_result in Result.objects():
         if sat_result.result == "sat":
             modify_instance(sat_result.nickname, sat_result.instance.filename, sat_result.model)
 
@@ -36,10 +44,11 @@ def main():
     start_server()
 
     try:
+        generate_v_instances()
+
         v_db = mongoengine.connect(v_config["database_name"], replicaset="monitoring_replSet")
         v_db.drop_database(v_config["database_name"])
-
-        generate_v_instances()
+        v_db.close()
 
         # run("bin/verification/v_config.py", 1)
 
