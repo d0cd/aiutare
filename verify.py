@@ -2,16 +2,57 @@
 import os
 import mongoengine
 import shutil
-from bin.benching.run import run
+# from bin.benching.run import run
 from bin.benching.config import config as og_config
 from bin.verification.v_config import v_config
-from categories.smt.schemas import Result, Instance
+from categories.smt.schemas import Result  # , Instance
 from bin.mongod_manager import start_server, end_server
 
 
-def modify_instance(nickname, filename, model):
+def parse_models(models):
+    models_arr = models.replace('\n', '').split("(model")[1:]
+
+    vars_and_values = []
+
+    for i in range(len(models_arr)):
+        vars_and_values.append([])
+        statements = models_arr[i].split("(define-fun ")[1:]
+        for statement in statements:
+            var = statement[0:statement.index(" ()")]
+            value = statement[statement.find('"') + 1:statement.rfind('"')]
+            vars_and_values[i].append((var, value))
+
+    return vars_and_values
+
+
+def format_clauses(vars_and_values):
+    formatted_clauses = []
+
+    for variable_set in vars_and_values:
+        clauses_string = ""
+        for var_data in variable_set:
+            new_clause = "(assert (= %s \"%s\"))\n" % (var_data[0], var_data[1])
+            clauses_string += new_clause
+        formatted_clauses.append(clauses_string)
+
+    return formatted_clauses
+
+
+def insert_statements(new_filename, formatted_clauses):
+    with open(new_filename, 'r+') as v_inst:
+        cur_check_sat = 0
+        for line in v_inst:
+            if line == "(check-sat)":
+                v_inst.write(formatted_clauses[cur_check_sat])
+                cur_check_sat += 1
+
+
+def modify_instance(nickname, filename, models):
     new_dir = v_config["instances"] + "/" + nickname
     new_filename = new_dir + "/" + filename.rsplit('/', 1)[1]
+
+    vars_and_values = parse_models(models)
+    formatted_clauses = format_clauses(vars_and_values)
 
     try:
         shutil.copy(filename, new_filename)
@@ -21,9 +62,7 @@ def modify_instance(nickname, filename, model):
         shutil.copy(filename, new_filename)
 
     finally:
-        with open(new_filename, 'a') as v_inst:
-            v_inst.write("\nMODEL BELOW:\n\n")
-            v_inst.write(model)
+        insert_statements(new_filename, formatted_clauses)
 
 
 # Populate bin/verification/v_instances with new instances
