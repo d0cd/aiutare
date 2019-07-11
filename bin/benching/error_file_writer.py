@@ -29,7 +29,7 @@ def read_num_errors():
         with open(FILENAME, "r") as f:
             arr_lines = f.readlines()
             num_errors = arr_lines[0][arr_lines[0].rindex(":") + 1:].strip("\n")
-            if num_errors > 0:
+            if int(num_errors) > 0:
                 print("\nThere are " + num_errors + " errors. You can see them in " + FILENAME + ".")
             print('\n')
     except Exception as exc:
