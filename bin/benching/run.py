@@ -8,7 +8,7 @@ from multiprocessing import Process
 from bin.benching.error_file_writer import read_num_errors, create_error_file
 
 
-def write_config(config):
+def write_config(config):  # TODO: move into mongod_manager so every executable does this step first
     # convert modules into importable format
     config["schemas"] = config["schemas"].rsplit(".", 1)[0].replace("/", ".")
     for program, handler in config["handlers"].items():
