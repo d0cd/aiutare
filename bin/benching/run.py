@@ -78,9 +78,7 @@ def run(config_filepath, num_bench):
             except Exception as e:
                 print("KILLING BENCHMARKING: ", e, file=sys.stderr)
 
+        database_monitor.join()
         database_monitor.terminate()
 
         read_num_errors()
-
-    from bin.analyze import analyze
-    analyze()

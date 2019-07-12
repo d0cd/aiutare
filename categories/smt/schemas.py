@@ -1,6 +1,7 @@
 import mongoengine
 from mongoengine import *
-from bin.benching.config import config
+from importlib import reload
+import bin.benching.config as config_file
 
 
 # MongoEngine schemas:
@@ -38,7 +39,8 @@ class Result(Document):
 # Formats and writes results to the database:
 # ------------------------------------------------
 def write_instances(instances):
-    mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
+    reload(config_file)
+    mongoengine.connect(config_file.config["database_name"], replicaset="monitoring_replSet")
 
     for instance in instances:
         if not Instance.objects(filename=instance):
@@ -53,8 +55,8 @@ def write_instances(instances):
 # Formats and writes results to the database:
 # ------------------------------------------------
 def write_results(program, nickname, instance, result, elapsed, model):
-
-    mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
+    reload(config_file)
+    mongoengine.connect(config_file.config["database_name"], replicaset="monitoring_replSet")
 
     this_instance = Instance.objects.get(filename=instance)
 

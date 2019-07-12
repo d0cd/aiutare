@@ -3,6 +3,7 @@
 import sys
 import argparse
 from bin.benching.run import run
+from bin.analyze import analyze
 from bin.mongod_manager import start_server, end_server
 
 
@@ -16,6 +17,7 @@ def main():
     start_server()
 
     run(config_filepath, num_bench)
+    analyze()
 
     kill_server = False  # TODO: handle with argparse
     if kill_server:

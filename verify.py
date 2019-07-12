@@ -2,9 +2,10 @@
 import os
 import mongoengine
 import shutil
+from multiprocessing import Process
 from bin.benching.run import run
 from bin.benching.config import config as og_config
-from bin.verification.v_config import v_config
+from bin.verification.v_config import config as v_config
 from categories.smt.schemas import Result  # , Instance
 from bin.mongod_manager import start_server, end_server
 
@@ -74,14 +75,21 @@ def generate_v_instances():
     mongoengine.connection.disconnect()
 
 
+def drop_v_db(db_name):
+    v_db = mongoengine.connect(db_name, replicaset="monitoring_replSet")
+    v_db.drop_database(db_name)
+    v_db.close()
+
+
 def main():
     start_server()
 
-    generate_v_instances()
-
-    v_db = mongoengine.connect(v_config["database_name"], replicaset="monitoring_replSet")
-    v_db.drop_database(v_config["database_name"])
-    v_db.close()
+    instance_generator = Process(target=generate_v_instances)
+    v_db_dropper = Process(target=drop_v_db, args=[v_config["database_name"]])
+    instance_generator.start()
+    instance_generator.join()
+    v_db_dropper.start()
+    v_db_dropper.join()
 
     run("bin/verification/v_config.py", 1)
 

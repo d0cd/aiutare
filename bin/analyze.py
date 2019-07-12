@@ -2,7 +2,7 @@
 import importlib
 import mongoengine
 from tabulate import tabulate
-from bin.benching.config import config
+import bin.benching.config as config_file
 
 COUNTS_INDEX = {
     "sat": 0,
@@ -112,6 +112,8 @@ def print_times(times_dict, counts_dict):
 
 
 def analyze():
+    importlib.reload(config_file)
+    config = config_file.config
     schemas = importlib.import_module(config["schemas"])
 
     global NICKNAMES

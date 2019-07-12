@@ -1,4 +1,4 @@
-v_config = {
+config = {
     "file_extension": "smt2",
     "database_name": "smt_verification",
     "timeout": 30.0,
