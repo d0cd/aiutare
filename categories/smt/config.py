@@ -22,7 +22,7 @@ config = {
             "cvc4":
                 {
                     "cvc4_models": "categories/smt/tools/cvc4 --lang smt --strings-exp --tlimit=33000 -q --dump-models",
-                    "cvc4_no_models": "categories/smt/tools/cvc4 --lang smt --strings-exp --tlimit=33000 -q",
+                    # "cvc4_no_models": "categories/smt/tools/cvc4 --lang smt --strings-exp --tlimit=33000 -q",
                 }
         }
 }
