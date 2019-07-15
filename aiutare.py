@@ -14,9 +14,9 @@ def main():
     if len(sys.argv) > 2:
         num_bench = int(sys.argv[2])
 
-    start_server()
+    start_server(config_filepath)
 
-    run(config_filepath, num_bench)
+    run(num_bench)
     analyze()
 
     kill_server = False  # TODO: handle with argparse

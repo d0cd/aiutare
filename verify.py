@@ -4,11 +4,11 @@ import mongoengine
 from mongoengine.context_managers import switch_db
 import shutil
 from multiprocessing import Process
-from bin.benching.run import run
 from categories.smt.config import config as og_config  # TODO: should be accessing bin.benching.config instead
 from bin.verification.v_config import config as v_config
 from categories.smt.schemas import Result, Instance
 from bin.mongod_manager import start_server, end_server
+from bin.benching.run import run
 
 
 def parse_models(models):
@@ -81,8 +81,9 @@ def evaluate_models():
     mongoengine.connect(v_config["database_name"], alias=v_config["database_name"], replicaset="monitoring_replSet")
 
     good_models = []
-    bad_models = []         # TODO: it works! but needs tidying up (thanks mongoengine...)
+    bad_models = []
 
+    # NOTE: this switch_db call is needed to access Instances from the (non-default) verification database
     with switch_db(Instance, v_config["database_name"]) as v_Instance:
         for v_instance in v_Instance.objects():
             identification = v_instance.filename[len(v_config["instances"]) + 1:].split('/', 1)
@@ -138,21 +139,19 @@ def update_results(good_models, bad_models):
 
 
 def main():
-    start_server()
+    start_server("bin/verification/v_config.py")
 
     mongoengine.register_connection("default", og_config["database_name"], og_config["database_name"])
     mongoengine.register_connection(v_config["database_name"], v_config["database_name"], v_config["database_name"])
-    mongoengine.connection.disconnect()
-    mongoengine.connection.disconnect()
 
     instance_generator = Process(target=generate_v_instances)
     v_db_dropper = Process(target=drop_v_db)
     instance_generator.start()
-    instance_generator.join()
     v_db_dropper.start()
+    instance_generator.join()
     v_db_dropper.join()
 
-    runner = Process(target=run, args=["bin/verification/v_config.py", 1])
+    runner = Process(target=run, args=[1])
     runner.start()
     runner.join()
 
