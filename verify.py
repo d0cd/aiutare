@@ -17,11 +17,13 @@ def parse_models(models):
 
     for model in models_arr:
         model = model[0:-1]
-        model = model.replace("() String", "")
 
-        lines = model.split("(define-fun")[1:]
+        lines = model.split("(define-fun ")[1:]
         for i in range(len(lines)):
-            lines[i] = "(assert (= " + lines[i].strip() + ")"
+            lines[i] = lines[i].strip()
+            var_name = lines[i][0:lines[i].find(' ')]
+            var_value = lines[i][lines[i].rfind(' '):-1]
+            lines[i] = "(assert (= " + var_name + " " + var_value + "))"
 
         assertions.append("\n" + '\n'.join(lines) + "\n")
 
@@ -35,8 +37,11 @@ def insert_statements(new_filename, assertions):
         cur_check_sat = 0
         for i in range(len(lines)):
             if "(check-sat)" in lines[i]:
-                lines[i] = assertions[cur_check_sat] + "\n" + lines[i]
-                cur_check_sat += 1
+                try:
+                    lines[i] = assertions[cur_check_sat] + "\n" + lines[i]
+                    cur_check_sat += 1
+                except IndexError:
+                    lines[i] = assertions[-1] + "\n" + lines[i]
 
         v_inst.seek(0)
         v_inst.truncate()
@@ -88,7 +93,7 @@ def evaluate_models():
         for v_instance in v_Instance.objects():
             identification = v_instance.filename[len(v_config["instances"]) + 1:].split('/', 1)
             nickname = identification[0]
-            instance_filename = identification[1]
+            instance_filename = "/" + identification[1]  # Users should absolute filepath for instance directory
 
             # This model is "verified" sat by all solvers
             if v_instance.num_unsat + v_instance.num_unknown == 0:
