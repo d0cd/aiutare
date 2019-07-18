@@ -96,7 +96,7 @@ def evaluate_models():
             instance_filename = "/" + identification[1]  # Users should absolute filepath for instance directory
 
             # This model is "verified" sat by all solvers
-            if v_instance.num_unsat + v_instance.num_unknown == 0:
+            if v_instance.num_unsat == 0:
                 good_models.append((nickname, instance_filename))
 
             # Otherwise, some solver did not find this model to be sat
