@@ -16,10 +16,10 @@ INCLUDE_ERROR = False
 INCLUDE_UNKNOWN = False
 
 AXIS_OPTIONS = ["elapsed", "num_conflicts", "num_decisions", "num_propagations",
-                "instance.num_variables", "instance.num_clauses"]
+                "instance.num_variables", "instance.num_clauses", "memory_used_MB"]
 
-X_AXIS = "instance.num_variables"
-Y_AXIS = "elapsed"
+X_AXIS = "elapsed"
+Y_AXIS = "memory_used_MB"
 
 X_COORDS = []
 Y_COORDS = []

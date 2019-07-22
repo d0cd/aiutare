@@ -1,7 +1,7 @@
 import mongoengine
 from mongoengine import *
-import numpy as np
-from bin.benching.config import config
+from importlib import reload
+import bin.benching.config as config_file
 
 
 # MongoEngine schemas:
@@ -57,7 +57,8 @@ def parse_cnf(instance):
 # Formats and writes results to the database:
 # ------------------------------------------------
 def write_instances(instances):
-    mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
+    reload(config_file)
+    mongoengine.connect(config_file.config["database_name"], replicaset="monitoring_replSet")
 
     for instance in instances:
         stripped_instance = instance.split("/", 1)[1]
@@ -77,8 +78,8 @@ def write_instances(instances):
 # Formats and writes results to the database:
 # ------------------------------------------------
 def write_results(program, nickname, instance, result, elapsed, results_dict=None):
-
-    mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
+    reload(config_file)
+    mongoengine.connect(config_file.config["database_name"], replicaset="monitoring_replSet")
 
     split_filename = instance.split("/", 1)[1]
     this_instance = Instance.objects.get(filename=split_filename)
@@ -109,25 +110,3 @@ def write_results(program, nickname, instance, result, elapsed, results_dict=Non
     # TODO
 
     mongoengine.connection.disconnect()
-
-
-# Function to parse data for analyze from the database:
-# ------------------------------------------------------
-def read_database():
-    data = {}
-
-    mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
-    parsed_result = np.dtype([('Instance', '<U14'), ('Result', '<U7'), ('Time', '<f8')])
-    for result in Result.objects():
-
-        # Formats data for analyze
-        new_data = np.array([(result.instance.filename, result.result, result.elapsed)], dtype=parsed_result)
-
-        if result.nickname in data:
-            data[result.nickname] = np.append(data[result.nickname], new_data)
-        else:
-            data[result.nickname] = new_data
-
-    mongoengine.connection.disconnect()
-
-    return data

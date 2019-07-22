@@ -9,6 +9,7 @@ PIP_DEPENDENCIES = [
         'pymongo',
         'mongoengine',
         'progressbar2',
+        'tabulate',
         'numpy',
         'scipy',
         'plotly'

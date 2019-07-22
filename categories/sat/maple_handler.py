@@ -17,7 +17,7 @@ def output_handler(nickname, instance, output, elapsed):
         elif 'SAT' in output or 'sat' in output:
             result = 'sat'
         elif 'TIMEOUT' in output or 'timeout' in output:
-            result = output
+            result = 'timeout'
         elif 'UNKNOWN' in output or 'unknown' in output:
             result = 'unknown'
 

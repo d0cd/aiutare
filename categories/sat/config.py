@@ -1,7 +1,7 @@
 config = {
     "file_extension": "cnf",
     "database_name": "sat_database",
-    "timeout": 30.0,
+    "timeout": 3000.0,
 
     "instances":    "categories/sat/instances",
     "schemas":      "categories/sat/schemas.py",
@@ -16,15 +16,15 @@ config = {
         {
             "syrup":
                 {
-                    "syrup_stock": "categories/sat/tools/syrupsat -nthreads=1 -cpu-lim=33"
+                    "syrup_stock": "categories/sat/tools/syrupsat -nthreads=1 -cpu-lim=3300"
                 },
             "minisat":
                 {
-                    "minisat_stock": "categories/sat/tools/minisat -cpu-lim=33",
+                    "minisat_stock": "categories/sat/tools/minisat -cpu-lim=3300",
                 },
             "maple":
                 {
-                    "maple_stock": "categories/sat/tools/maplesat -cpu-lim=33"
+                    "maple_stock": "categories/sat/tools/maplesat -cpu-lim=3300"
                 }
         }
 }

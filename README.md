@@ -13,12 +13,10 @@ Automated Analysis, Regression, and Evaluation
 ./aiutare.py [absolute path to config.json file] [number of runs; 1 if omitted]
 ```
 
-### For Development
-- To view all contents of the database:
+### Plotting
 ```
-python3 -m bin.test_read_db
+./plot.py [absolute path to config.json file]
 ```
-- To drop the current database:
-```
-python3 -m bin.drop_databases
-```
+
+### Database Manipulation
+- [MongoDB Compass](https://docs.mongodb.com/compass/current/install/) strongly recommended

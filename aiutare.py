@@ -2,8 +2,9 @@
 
 import sys
 import argparse
-from subprocess import Popen, DEVNULL
 from bin.benching.run import run
+from bin.analyze import analyze
+from bin.mongod_manager import start_server, end_server
 
 
 def main():
@@ -13,12 +14,14 @@ def main():
     if len(sys.argv) > 2:
         num_bench = int(sys.argv[2])
 
-    mongod = Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
-                   " --replSet monitoring_replSet".split(), stdout=DEVNULL)
+    start_server(config_filepath)
 
-    run(config_filepath, num_bench)
+    run(num_bench)
+    analyze()
 
-    mongod.terminate()
+    kill_server = False  # TODO: handle with argparse
+    if kill_server:
+        end_server()
 
 
 if __name__ == '__main__':
