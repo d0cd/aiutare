@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import importlib
-from subprocess import Popen, DEVNULL
 import mongoengine
 import plotly
 import plotly.graph_objs as go
@@ -12,17 +11,16 @@ import numpy as np
 INCLUDE_SAT = True
 INCLUDE_UNSAT = True
 INCLUDE_TIMEOUT = True
-INCLUDE_ERROR = False
 INCLUDE_UNKNOWN = False
+INCLUDE_ERROR = False
 
-AXIS_OPTIONS = ["elapsed", "num_conflicts", "num_decisions", "num_propagations",
-                "instance.num_variables", "instance.num_clauses", "memory_used_MB"]
-
-X_AXIS = "elapsed"
-Y_AXIS = "memory_used_MB"
+X_AXIS = None
+Y_AXIS = None
+Z_AXIS = None   # If this is assigned a value then we are creating a 3D scatterplot
 
 X_COORDS = []
 Y_COORDS = []
+Z_COORDS = []
 
 DATA = []
 
@@ -31,9 +29,13 @@ def initialize_coords(names, schemas):
     for i in range(len(names)):
         X_COORDS.append([])
         Y_COORDS.append([])
+        Z_COORDS.append([])
 
     x_parser = attrgetter(X_AXIS)
     y_parser = attrgetter(Y_AXIS)
+    z_parser = None
+    if Z_AXIS:
+        z_parser = attrgetter(Z_AXIS)
 
     for result in schemas.Result.objects():
         index = names.index(result.nickname)
@@ -44,13 +46,18 @@ def initialize_coords(names, schemas):
                 (result.result == "unknown" and INCLUDE_UNKNOWN):
             X_COORDS[index].append(x_parser(result))
             Y_COORDS[index].append(y_parser(result))
+            if Z_AXIS:
+                Z_COORDS[index].append(z_parser(result))
 
     for i in range(len(names)):
         counter = 0
         while counter < len(X_COORDS[i]):
-            if X_COORDS[i][counter] is None or Y_COORDS[i][counter] is None:
+            if X_COORDS[i][counter] is None or Y_COORDS[i][counter] is None or \
+                    (Z_AXIS and Z_COORDS[i][counter] is None):
                 X_COORDS[i].pop(counter)
                 Y_COORDS[i].pop(counter)
+                if Z_AXIS:
+                    Z_COORDS[i].pop(counter)
             else:
                 counter += 1
 
@@ -103,29 +110,77 @@ def quadratic_regress(i, names):
     ))
 
 
-def graph_lines():
-    layout = go.Layout(
-        hovermode='closest',
-        xaxis=dict(
-            title=X_AXIS,
-            ticklen=5,
-            zeroline=False,
-            gridwidth=2,
-        ),
-        yaxis=dict(
-            title=Y_AXIS,
-            ticklen=5,
-            gridwidth=2,
+def format_data(nicknames):
+    for i in range(len(nicknames)):
+        if not (len(X_COORDS[i]) == 0 or not len(X_COORDS[i]) == len(Y_COORDS[i])):
+            if Z_AXIS is not None:
+                # 3D scatterplot case
+                DATA.append(go.Scatter3d(
+                    x=X_COORDS[i],
+                    y=Y_COORDS[i],
+                    z=Z_COORDS[i],
+                    mode='markers',
+                    name=nicknames[i]
+                ))
+            else:
+                # 2D scatterplot case (with regression lines)
+                DATA.append(go.Scatter(
+                    x=X_COORDS[i],
+                    y=Y_COORDS[i],
+                    mode='markers',
+                    name=nicknames[i]
+                ))
+                arr_r_squared = [0.0, 0.0, 0.0]
+
+                arr_r_squared[0] = stats.linregress(X_COORDS[i], Y_COORDS[i])[2]
+                arr_r_squared[1] = quadratic_r_squared(i)
+                arr_r_squared[2] = stats.linregress(X_COORDS[i], np.log(Y_COORDS[i]))[2]
+
+                optimal_fit = arr_r_squared.index(max(arr_r_squared))
+
+                if optimal_fit == 0:
+                    linear_regress(i, nicknames)
+                elif optimal_fit == 1:
+                    quadratic_regress(i, nicknames)
+                else:
+                    exp_regress(i, nicknames)
+
+
+def format_layout():
+    if Z_AXIS is not None:
+        # 3D scatterplot case
+        layout = go.Layout(
+            scene=dict(
+                xaxis=dict(
+                    title=X_AXIS),
+                yaxis=dict(
+                    title=Y_AXIS),
+                zaxis=dict(
+                    title=Z_AXIS), ),
         )
-    )
+    else:
+        # 2D scatterplot case (with regression lines)
+        layout = go.Layout(
+            hovermode='closest',
+            xaxis=dict(
+                title=X_AXIS,
+                ticklen=5,
+                zeroline=False,
+                gridwidth=2,
+            ),
+            yaxis=dict(
+                title=Y_AXIS,
+                ticklen=5,
+                gridwidth=2,
+            )
+        )
 
-    plotly.offline.plot({
-        "data": DATA,
-        "layout": layout
-    }, auto_open=True, filename="plots/testerScatter.html")
+    return layout
 
 
-def scatterplot():
+def scatterplot(x, y, z):
+    global X_AXIS, Y_AXIS, Z_AXIS
+    X_AXIS, Y_AXIS, Z_AXIS = x, y, z
 
     schemas = importlib.import_module(config["schemas"])
     mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
@@ -135,30 +190,17 @@ def scatterplot():
 
     initialize_coords(nicknames, schemas)
 
-    for i in range(len(nicknames)):
-        if not (len(X_COORDS[i]) == 0 or not len(X_COORDS[i]) == len(Y_COORDS[i])):
-            DATA.append(go.Scatter(
-                x=X_COORDS[i],
-                y=Y_COORDS[i],
-                mode='markers',
-                name=nicknames[i]
-            ))
+    format_data(nicknames)
+    layout = format_layout()
 
-            arr_r_squared = [0.0, 0.0, 0.0]
+    if Z_AXIS is None:
+        filename = "plots/Scatterplot2D.html"
+    else:
+        filename = "plots/Scatterplot3D.html"
 
-            arr_r_squared[0] = stats.linregress(X_COORDS[i], Y_COORDS[i])[2]
-            arr_r_squared[1] = quadratic_r_squared(i)
-            arr_r_squared[2] = stats.linregress(X_COORDS[i], np.log(Y_COORDS[i]))[2]
-
-            optimal_fit = arr_r_squared.index(max(arr_r_squared))
-
-            if optimal_fit == 0:
-                linear_regress(i, nicknames)
-            elif optimal_fit == 1:
-                quadratic_regress(i, nicknames)
-            else:
-                exp_regress(i, nicknames)
-
-    graph_lines()
+    plotly.offline.plot({
+        "data": DATA,
+        "layout": layout,
+    }, auto_open=True, filename=filename)
 
     mongoengine.connection.disconnect()
