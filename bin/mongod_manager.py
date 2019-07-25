@@ -5,6 +5,7 @@ import psutil
 import importlib.util
 from pymongo import MongoClient
 from subprocess import Popen, DEVNULL
+from pathlib import Path
 
 
 def write_config(config_filepath):
@@ -13,14 +14,15 @@ def write_config(config_filepath):
     config_file = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(config_file)
     config = config_file.config
-
     # Converts modules into importable format
     config["schemas"] = config["schemas"].rsplit(".", 1)[0].replace("/", ".")
+    config["schemas"] = config["schemas"].rsplit(".", 1)[0].replace("\\", ".")
     for program, handler in config["handlers"].items():
         config["handlers"][program] = handler.rsplit(".", 1)[0].replace("/", ".")
+        config["handlers"][program] = handler.rsplit(".", 1)[0].replace("\\", ".")
 
     # Writes a local copy of the user-provided config file
-    with open("bin/benching/config.py", "w") as file:
+    with open(Path(r"bin/benching/config.py"), "w") as file:
         file.write("config = " + str(config) + "\n")
         file.flush()
 
@@ -33,8 +35,8 @@ def start_server(config_filepath):
         if process.name() == "mongod":
             return
 
-    Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
-          " --replSet monitoring_replSet".split(), stdout=DEVNULL)
+    Popen(["mongod", "--dbpath", str(Path(r"./results")), "--logpath", str(Path(r"./results/log/mongodb.log")), " --replSet",
+           "monitoring_replSet"], stdout=DEVNULL)
 
     # Waits until the server is accepting connections before exiting
     client = MongoClient()
