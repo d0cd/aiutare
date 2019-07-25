@@ -3,6 +3,7 @@ import os
 import sys
 import platform
 from subprocess import run, call
+from bin.mongod_manager import start_server
 
 
 PIP_DEPENDENCIES = [
@@ -30,14 +31,6 @@ def main():
     os.chown("results/log", uid, -1)
     os.chown("plots", uid, -1)
 
-    print("Calling correct OS MongoDB install script")
-    operating_system = platform.system()
-    if operating_system == "Linux":
-        run(['./bin/install_mongodb/linux.sh'])
-    else:
-        print("OS not currently supported :(")
-        exit(1)
-
     for root, dirs, files in os.walk("results"):
         for file in dirs:
             os.chmod(os.path.join(root, file), 0o0777)
@@ -46,6 +39,14 @@ def main():
 
     for dependency in PIP_DEPENDENCIES:
         pip_install(dependency)
+
+    config_filepath = sys.argv[1]
+
+    try:
+        start_server(config_filepath)
+    except Exception as e:
+        print(e)
+        print("Please ensure you have the latest version of MongoDB installed.")
 
 
 if __name__ == '__main__':
