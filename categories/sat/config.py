@@ -3,7 +3,7 @@ config = {
     "database_name": "sat_database",
     "timeout": 3000.0,
 
-    "instances":    r"C:\Users\Owner\PycharmProjects\aiutare\categories\sat\minisat_handler.py",
+    "instances":    r"categories/sat/instances",
     "schemas":      r"categories/sat/schemas.py",
     "handlers":
         {
