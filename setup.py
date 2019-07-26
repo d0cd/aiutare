@@ -3,7 +3,7 @@ import os
 import sys
 import platform
 from subprocess import run, call
-from bin.mongod_manager import start_server
+
 
 
 PIP_DEPENDENCIES = [
@@ -13,7 +13,8 @@ PIP_DEPENDENCIES = [
         'tabulate',
         'numpy',
         'scipy',
-        'plotly'
+        'plotly',
+        'psutil'
 ]
 
 
@@ -25,11 +26,11 @@ def main():
     print("Creating directory structure")
     os.makedirs("results/log", exist_ok=True)
     os.makedirs("plots", exist_ok=True)
-
-    uid = os.getuid()
-    os.chown("results", uid, -1)
-    os.chown("results/log", uid, -1)
-    os.chown("plots", uid, -1)
+    if platform.system() != "Windows":
+        uid = os.getuid()
+        os.chown("results", uid, -1)
+        os.chown("results/log", uid, -1)
+        os.chown("plots", uid, -1)
 
     for root, dirs, files in os.walk("results"):
         for file in dirs:
@@ -41,6 +42,8 @@ def main():
         pip_install(dependency)
 
     config_filepath = sys.argv[1]
+
+    from bin.mongod_manager import start_server
 
     try:
         start_server(config_filepath)

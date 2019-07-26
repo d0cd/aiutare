@@ -4,6 +4,7 @@ import sys
 import subprocess
 import signal
 import datetime
+import importlib
 import concurrent.futures
 from bin.benching.config import config
 
@@ -18,17 +19,17 @@ def run_problem(program, nickname, command, instance):
         invocation,
         shell=True,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        preexec_fn=os.setsid
+        stderr=subprocess.PIPE
     )
     # wait for it to complete
     try:
         process.wait(timeout=config["timeout"])
+
     # if it times out ...
     except subprocess.TimeoutExpired:
         # kill it
         # print('TIMED OUT:', repr(invocation), '... killing', process.pid, file=sys.stderr)
-        os.killpg(os.getpgid(process.pid), signal.SIGINT)
+        os.kill(process.pid, signal.SIGINT)
         # set timeout result
         elapsed = config["timeout"]
         output = 'timeout (%.1f s)' % config["timeout"]
@@ -41,8 +42,8 @@ def run_problem(program, nickname, command, instance):
         stdout = process.stdout.read().decode("utf-8", "ignore")
         stderr = process.stderr.read().decode("utf-8", "ignore")
         output = stdout + stderr
-    OUTPUT_HANDLERS[program](nickname, instance, output, elapsed)
-
+    program_handler_location = importlib.import_module(config["handlers"][program])
+    program_handler_location.output_handler(nickname, instance, output, elapsed)
 
 # program, specification["id"], specification["command"], problems
 def run_solver(args):

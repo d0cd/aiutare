@@ -38,7 +38,7 @@ def start_server(config_filepath):
 
     # Checks if a server is already running
     for process in psutil.process_iter():
-        if process.name() == "mongod":
+        if process.name() == "mongod" or process.name() == "mongod.exe":
             return
 
     if platform.system() == "Windows":
@@ -64,5 +64,5 @@ def start_server(config_filepath):
 
 def end_server():
     for process in psutil.process_iter():
-        if process.name() == "mongod":
+        if process.name() == "mongod" or process.name() == "mongod.exe":
             process.kill()
