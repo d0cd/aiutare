@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 from bin.plotting.scatterplot import scatterplot
-from bin.mongod_manager import start_server, end_server
+from bin.mongod_manager import write_config, start_server, end_server
 
 
 def parse_arguments():
@@ -10,10 +10,11 @@ def parse_arguments():
 
     # global args
     global_parser.add_argument(
-        metavar='config',
+        '-cfg',
         dest='config_filepath',
         type=str,
-        help='absolute filepath to the user-provided config file'
+        default=None,
+        help='absolute filepath to the user-provided config file (default: uses config provided to setup.py'
     )
     global_parser.add_argument(
         metavar='x',
@@ -50,7 +51,10 @@ def parse_arguments():
 def main():
     args = parse_arguments()
 
-    start_server(args.config_filepath)
+    if args.config_filepath is not None:
+        write_config(args.config_filepath)
+
+    start_server()
 
     scatterplot(args.x, args.y, args.z)
 

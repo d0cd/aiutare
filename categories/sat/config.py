@@ -2,7 +2,7 @@
 config = {
     "file_extension": "cnf",
     "database_name": "sat_database",
-    "timeout": 3000.0,
+    "timeout": 30.0,
 
     "instances":    "categories/sat/instances",
     "schemas":      "categories/sat/schemas.py",
@@ -12,7 +12,7 @@ config = {
             "minisat":  "categories/sat/minisat_handler.py",
             "maple":    "categories/sat/maple_handler.py"
         },
-    "commands":
+    "commands":  # TODO: replace with executable filepaths for your local machine
         {
             "syrup":
                 {

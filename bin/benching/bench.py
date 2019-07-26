@@ -45,6 +45,7 @@ def run_problem(program, nickname, command, instance):
     program_handler_location = importlib.import_module(config["handlers"][program])
     program_handler_location.output_handler(nickname, instance, output, elapsed)
 
+
 # program, specification["id"], specification["command"], problems
 def run_solver(args):
     program = args[0]
@@ -64,10 +65,7 @@ def signal_handler():
         exit(0)
 
 
-def bench(instances, handlers):
-    global OUTPUT_HANDLERS
-    OUTPUT_HANDLERS = handlers
-
+def bench(instances):
     signal.signal(signal.SIGTERM, signal_handler)
 
     args = [[program, nickname, command, instances] for

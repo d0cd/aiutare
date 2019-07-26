@@ -33,9 +33,7 @@ def ping_server():
         time.sleep(0.5)
 
 
-def start_server(config_filepath):
-    write_config(config_filepath)
-
+def start_server():
     # Checks if a server is already running
     for process in psutil.process_iter():
         if process.name() == "mongod" or process.name() == "mongod.exe":

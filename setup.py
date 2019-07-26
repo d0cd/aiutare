@@ -2,8 +2,8 @@
 import os
 import sys
 import platform
-from subprocess import run, call
-
+import argparse
+from subprocess import call
 
 
 PIP_DEPENDENCIES = [
@@ -18,11 +18,28 @@ PIP_DEPENDENCIES = [
 ]
 
 
+def parse_arguments():
+    # create arg parser
+    global_parser = argparse.ArgumentParser(description='modular benchmarking framework')
+
+    # global args
+    global_parser.add_argument(
+        metavar='cfg',
+        dest='config_filepath',
+        type=str,
+        help='absolute filepath to the user-provided config file'
+    )
+
+    return global_parser.parse_args()
+
+
 def pip_install(package):
     call([sys.executable, "-m", "pip", "install", package])
 
 
 def main():
+    args = parse_arguments()
+
     print("Creating directory structure")
     os.makedirs("results/log", exist_ok=True)
     os.makedirs("plots", exist_ok=True)
@@ -41,12 +58,11 @@ def main():
     for dependency in PIP_DEPENDENCIES:
         pip_install(dependency)
 
-    config_filepath = sys.argv[1]
-
-    from bin.mongod_manager import start_server
+    from bin.mongod_manager import start_server, write_config
+    write_config(args.config_filepath)
 
     try:
-        start_server(config_filepath)
+        start_server()
     except Exception as e:
         print(e)
         print("Please ensure you have the latest version of MongoDB installed.")
