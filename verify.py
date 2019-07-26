@@ -7,8 +7,9 @@ from multiprocessing import Process
 from categories.smt.config import config as og_config  # TODO: should be accessing bin.benching.config instead
 from bin.verification.v_config import config as v_config
 from categories.smt.schemas import Result, Instance
-from bin.mongod_manager import start_server, end_server
+from bin.mongod_manager import write_config, start_server, end_server
 from bin.benching.run import run
+from pathlib import Path
 
 
 def parse_models(models):
@@ -49,7 +50,7 @@ def insert_statements(new_filename, assertions):
 
 
 def modify_instance(nickname, filename, models):
-    new_dir = v_config["instances"] + "/" + nickname + "/" + filename.rsplit("/", 1)[0]
+    new_dir = v_config["instances"] + "/" + nickname + "/" + filename.rsplit(os.sep, 1)[0]
     new_filename = v_config["instances"] + "/" + nickname + "/" + filename
 
     os.makedirs(new_dir, exist_ok=True)
@@ -91,9 +92,9 @@ def evaluate_models():
     # NOTE: this switch_db call is needed to access Instances from the (non-default) verification database
     with switch_db(Instance, v_config["database_name"]) as v_Instance:
         for v_instance in v_Instance.objects():
-            identification = v_instance.filename[len(v_config["instances"]) + 1:].split('/', 1)
+            identification = v_instance.filename[len(v_config["instances"]) + 1:].split(os.sep, 1)
             nickname = identification[0]
-            instance_filename = "/" + identification[1]  # Users should absolute filepath for instance directory
+            instance_filename = Path(identification[1])  # Users should relative filepath for instance directory
 
             # This model is "verified" sat by all solvers
             if v_instance.num_unsat == 0:
@@ -117,7 +118,7 @@ def update_results(good_models, bad_models):
     print("\nFalsified Models:")
     print("-----------------")
     for sat_result in Result.objects(result="sat"):
-        if (sat_result.nickname, sat_result.instance.filename) in good_models:
+        if (sat_result.nickname, Path(sat_result.instance.filename)) in good_models:
             sat_result.modify(set__verified="YES")
             verified_instances.append(sat_result.instance.filename)
 
@@ -144,7 +145,8 @@ def update_results(good_models, bad_models):
 
 
 def main():
-    start_server("bin/verification/v_config.py")
+    write_config("bin/verification/v_config.py")
+    start_server()
 
     mongoengine.register_connection("default", og_config["database_name"], og_config["database_name"])
     mongoengine.register_connection(v_config["database_name"], v_config["database_name"], v_config["database_name"])

@@ -2,6 +2,7 @@
 
 import time
 import psutil
+import platform
 import importlib.util
 from pymongo import MongoClient
 from subprocess import Popen, DEVNULL
@@ -25,24 +26,41 @@ def write_config(config_filepath):
         file.flush()
 
 
-def start_server(config_filepath):
-    write_config(config_filepath)
-
-    # Checks if a server is already running
-    for process in psutil.process_iter():
-        if process.name() == "mongod":
-            return
-
-    Popen("mongod --dbpath ./results --logpath ./results/log/mongodb.log".split() +
-          " --replSet monitoring_replSet".split(), stdout=DEVNULL)
-
-    # Waits until the server is accepting connections before exiting
+# Waits until the server is accepting connections before returning
+def ping_server():
     client = MongoClient()
     while client.local.command('ping')['ok'] != 1.0:
         time.sleep(0.5)
 
 
+def start_server():
+    # Checks if a server is already running
+    for process in psutil.process_iter():
+        if process.name() == "mongod" or process.name() == "mongod.exe":
+            return
+
+    if platform.system() == "Windows":
+        mongod_location = input("Please input the location of your mongod executable: ")
+
+        Popen("\"%s\" " % mongod_location +
+              "--dbpath=\"./results\" " +
+              "--logpath=\"./results/log/mongodb.log\" " +
+              "--replSet=\"monitoring_replSet\" ")
+
+        ping_server()
+
+        Popen("%s --eval \"rs.initiate()\"" % (mongod_location.replace("mongod.exe", "mongo.exe")), stdout=DEVNULL)
+
+    else:
+        Popen(["mongod", "--dbpath", r"./results", "--logpath", r"./results/log/mongodb.log",
+               "--replSet", "monitoring_replSet"], stdout=DEVNULL)
+
+        ping_server()
+
+        Popen("mongo --eval \"rs.initiate()\"", stdout=DEVNULL)
+
+
 def end_server():
     for process in psutil.process_iter():
-        if process.name() == "mongod":
+        if process.name() == "mongod" or process.name() == "mongod.exe":
             process.kill()

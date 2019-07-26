@@ -2,7 +2,8 @@
 import os
 import sys
 import platform
-from subprocess import run, call
+import argparse
+from subprocess import call
 
 
 PIP_DEPENDENCIES = [
@@ -12,8 +13,24 @@ PIP_DEPENDENCIES = [
         'tabulate',
         'numpy',
         'scipy',
-        'plotly'
+        'plotly',
+        'psutil'
 ]
+
+
+def parse_arguments():
+    # create arg parser
+    global_parser = argparse.ArgumentParser(description='modular benchmarking framework')
+
+    # global args
+    global_parser.add_argument(
+        metavar='cfg',
+        dest='config_filepath',
+        type=str,
+        help='absolute filepath to the user-provided config file'
+    )
+
+    return global_parser.parse_args()
 
 
 def pip_install(package):
@@ -21,22 +38,16 @@ def pip_install(package):
 
 
 def main():
+    args = parse_arguments()
+
     print("Creating directory structure")
     os.makedirs("results/log", exist_ok=True)
     os.makedirs("plots", exist_ok=True)
-
-    uid = os.getuid()
-    os.chown("results", uid, -1)
-    os.chown("results/log", uid, -1)
-    os.chown("plots", uid, -1)
-
-    print("Calling correct OS MongoDB install script")
-    operating_system = platform.system()
-    if operating_system == "Linux":
-        run(['./bin/install_mongodb/linux.sh'])
-    else:
-        print("OS not currently supported :(")
-        exit(1)
+    if platform.system() != "Windows":
+        uid = os.getuid()
+        os.chown("results", uid, -1)
+        os.chown("results/log", uid, -1)
+        os.chown("plots", uid, -1)
 
     for root, dirs, files in os.walk("results"):
         for file in dirs:
@@ -46,6 +57,15 @@ def main():
 
     for dependency in PIP_DEPENDENCIES:
         pip_install(dependency)
+
+    from bin.mongod_manager import start_server, write_config
+    write_config(args.config_filepath)
+
+    try:
+        start_server()
+    except Exception as e:
+        print(e)
+        print("Please ensure you have the latest version of MongoDB installed.")
 
 
 if __name__ == '__main__':
