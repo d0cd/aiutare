@@ -42,6 +42,7 @@ def start_server():
     if platform.system() == "Windows":
         mongod_location = input("Please input the location of your mongod executable: ")
 
+        print("Starting new mongod server process")
         Popen("\"%s\" " % mongod_location +
               "--dbpath=\"./results\" " +
               "--logpath=\"./results/log/mongodb.log\" " +
@@ -49,15 +50,16 @@ def start_server():
 
         ping_server()
 
-        Popen("%s --eval \"rs.initiate()\"" % (mongod_location.replace("mongod.exe", "mongo.exe")), stdout=DEVNULL)
+        Popen([(mongod_location.replace("mongod.exe", "mongo.exe")), "--eval", "\"rs.initiate()\""], stdout=DEVNULL)
 
     else:
+        print("Starting new mongod server process")
         Popen(["mongod", "--dbpath", r"./results", "--logpath", r"./results/log/mongodb.log",
                "--replSet", "monitoring_replSet"], stdout=DEVNULL)
 
         ping_server()
 
-        Popen("mongo --eval \"rs.initiate()\"", stdout=DEVNULL)
+        Popen(["mongo", "--eval", "\"rs.initiate()\""], stdout=DEVNULL)
 
 
 def end_server():

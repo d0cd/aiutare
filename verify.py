@@ -122,7 +122,7 @@ def update_results(good_models, bad_models):
             sat_result.modify(set__verified="YES")
             verified_instances.append(sat_result.instance.filename)
 
-        elif (sat_result.nickname, sat_result.instance.filename) in bad_models:
+        elif (sat_result.nickname, Path(sat_result.instance.filename)) in bad_models:
             sat_result.modify(set__verified="NO")
             print(sat_result.nickname, sat_result.instance.filename)
 

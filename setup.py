@@ -3,7 +3,7 @@ import os
 import sys
 import platform
 import argparse
-from subprocess import call
+from subprocess import call, DEVNULL
 
 
 PIP_DEPENDENCIES = [
@@ -34,7 +34,7 @@ def parse_arguments():
 
 
 def pip_install(package):
-    call([sys.executable, "-m", "pip", "install", package])
+    call([sys.executable, "-m", "pip", "install", "--user", package], stdout=DEVNULL)
 
 
 def main():
@@ -55,6 +55,8 @@ def main():
         for file in files:
             os.chmod(os.path.join(root, file), 0o0777)
 
+    print("Installing pip dependencies")
+    call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"], stdout=DEVNULL)
     for dependency in PIP_DEPENDENCIES:
         pip_install(dependency)
 
@@ -66,6 +68,9 @@ def main():
     except Exception as e:
         print(e)
         print("Please ensure you have the latest version of MongoDB installed.")
+        exit(1)
+
+    print("Setup successful!")
 
 
 if __name__ == '__main__':
