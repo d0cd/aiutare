@@ -7,4 +7,6 @@ results
 bin/benching/errors.txt
 categories/smt/instances/*
 
+aiutare.egg-info
+
 bin/verification/v_instances/*

@@ -2,7 +2,7 @@
 import os
 import sys
 import platform
-import argparse
+import setuptools
 from subprocess import call, DEVNULL
 
 
@@ -18,28 +18,11 @@ PIP_DEPENDENCIES = [
 ]
 
 
-def parse_arguments():
-    # create arg parser
-    global_parser = argparse.ArgumentParser(description='modular benchmarking framework')
-
-    # global args
-    global_parser.add_argument(
-        metavar='cfg',
-        dest='config_filepath',
-        type=str,
-        help='absolute filepath to the user-provided config file'
-    )
-
-    return global_parser.parse_args()
-
-
 def pip_install(package):
     call([sys.executable, "-m", "pip", "install", "--user", package], stdout=DEVNULL)
 
 
 def main():
-    args = parse_arguments()
-
     print("Creating directory structure")
     os.makedirs("results/log", exist_ok=True)
     os.makedirs("plots", exist_ok=True)
@@ -60,17 +43,43 @@ def main():
     for dependency in PIP_DEPENDENCIES:
         pip_install(dependency)
 
-    from bin.mongod_manager import start_server, write_config
-    write_config(args.config_filepath)
+    print("Calling setuptools.setup function")
+    with open("README.md", "r") as fh:
+        long_description = fh.read()
+
+    setuptools.setup(
+        name="aiutare",
+        version="1.0",
+        author="Lukas Finnbarr O'Callahan, Federico Mora",
+        author_email="lukasocallahan@gmail.com, fmora@cs.toronto.edu",
+        description="A benchmarking framework for SAT, SMT, and equivalence checking programs.",
+        long_description=long_description,
+        long_description_content_type="text/markdown",
+        url="https://github.com/FedericoAureliano/aiutare",
+        scripts=[
+            'bin/aiutare',
+            'bin/plot',
+            'bin/verify'
+        ],
+        packages=setuptools.find_packages(),
+        classifiers=[
+            "Programming Language :: Python :: 3",
+            "License :: OSI Approved :: MIT License",
+            "Operating System :: POSIX :: Linux",
+            "Operating System :: Microsoft :: Windows",
+        ],
+        requires=PIP_DEPENDENCIES,
+    )
+
+    from bin.mongod_manager import start_server
 
     try:
         start_server()
     except Exception as e:
         print(e)
         print("Please ensure you have the latest version of MongoDB installed.")
-        exit(1)
 
-    print("Setup successful!")
+    print("\nSetup successful!")
 
 
 if __name__ == '__main__':

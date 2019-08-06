@@ -4,17 +4,23 @@ Automated Analysis, Regression, and Evaluation
 ### Setup
 - See the [Setup wiki page](https://github.com/FedericoAureliano/aiutare/wiki/Setup) for creating the config and other necessary files
 ```
-./setup.py
+python3 setup.py develop --user
 ```
-- (Currently written only for Ubuntu 16.04 and 18.04)
 
 ### Usage
 ```
-./aiutare.py [absolute path to config.json file] [number of runs; 1 if omitted]
+aiutare [-h] config_filepath
 ```
 
-### Visualization
-- TODO: plotting functionality coming soon
+### Plotting
+```
+plot [-h] x y
+```
+
+### Solution Verification
+```
+verify [-h]
+```
 
 ### Database Manipulation
 - [MongoDB Compass](https://docs.mongodb.com/compass/current/install/) strongly recommended

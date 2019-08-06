@@ -14,7 +14,7 @@ def parse_arguments():
         dest='config_filepath',
         type=str,
         default=None,
-        help='absolute filepath to the user-provided config file (default: uses config provided to setup.py'
+        help='absolute filepath to the user-provided config file (default: uses config last provided to aiutare)'
     )
     global_parser.add_argument(
         metavar='x',
