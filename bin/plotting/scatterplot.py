@@ -7,6 +7,8 @@ from bin.benching.config import config
 from scipy import stats
 from operator import attrgetter
 import numpy as np
+import os
+import math
 
 INCLUDE_SAT = True
 INCLUDE_UNSAT = True
@@ -74,7 +76,7 @@ def quadratic_r_squared(i):
     return r_squared
 
 
-def linear_regress(i, names):
+def linear_regress(i, names, r_squared):
     slope, intercept, r_value, p_value, std_err = stats.linregress(X_COORDS[i], Y_COORDS[i])
     DATA.append(go.Scatter(
         x=[0.0, max(X_COORDS[i])],
@@ -82,9 +84,13 @@ def linear_regress(i, names):
         mode='lines',
         name=(names[i] + " Regression Line Linear")
     ))
+    if RF:
+        print("\n-" + names[i] + "-")
+        print("The formula for the line of best fit is:\ny = ("+str(slope)+")x + ("+str(intercept)+")")
+        print("The r squared value is: " + str(r_squared))
 
 
-def exp_regress(i, names):
+def exp_regress(i, names, r_squared):
     slope, intercept, r_value, p_value, std_err = stats.linregress(X_COORDS[i], np.log(Y_COORDS[i]))
     x_coords_tmp = np.linspace(0, max(X_COORDS[i]), 200)
     y_coords_tmp = np.exp(slope * x_coords_tmp + intercept)
@@ -94,9 +100,14 @@ def exp_regress(i, names):
         mode='lines',
         name=(names[i] + " Regression Line Exponential")
     ))
+    if RF:
+        print("\n-" + names[i] + "-")
+        print("The formula for the line of best fit is:\ny = (" + str(math.exp(intercept)) +
+              ")(" + str(math.exp(slope)) + ")^x")
+        print("The r squared value is: " + str(r_squared))
 
 
-def quadratic_regress(i, names):
+def quadratic_regress(i, names, r_squared):
     z = np.polyfit(X_COORDS[i], Y_COORDS[i], 2)
     f = np.poly1d(z)
     x_coords_tmp = np.linspace(0, max(X_COORDS[i]), 200)
@@ -108,6 +119,11 @@ def quadratic_regress(i, names):
         mode='lines',
         name=(names[i] + " Regression Line Quadratic")
     ))
+    if RF:
+        print("\n-" + names[i] + "-")
+        print("The formula for the line of best fit is:\ny = (" + str(z[0]) + ")x^2 + " +
+              "(" + str(z[1])+")x + ("+str(z[2])+")")
+        print("The r squared value is: " + str(r_squared))
 
 
 def format_data(nicknames):
@@ -135,15 +151,13 @@ def format_data(nicknames):
                 arr_r_squared[0] = stats.linregress(X_COORDS[i], Y_COORDS[i])[2]
                 arr_r_squared[1] = quadratic_r_squared(i)
                 arr_r_squared[2] = stats.linregress(X_COORDS[i], np.log(Y_COORDS[i]))[2]
-
                 optimal_fit = arr_r_squared.index(max(arr_r_squared))
-
                 if optimal_fit == 0:
-                    linear_regress(i, nicknames)
+                    linear_regress(i, nicknames, max(arr_r_squared))
                 elif optimal_fit == 1:
-                    quadratic_regress(i, nicknames)
+                    quadratic_regress(i, nicknames, max(arr_r_squared))
                 else:
-                    exp_regress(i, nicknames)
+                    exp_regress(i, nicknames, max(arr_r_squared))
 
 
 def format_layout():
@@ -178,9 +192,9 @@ def format_layout():
     return layout
 
 
-def scatterplot(x, y, z):
-    global X_AXIS, Y_AXIS, Z_AXIS
-    X_AXIS, Y_AXIS, Z_AXIS = x, y, z
+def scatterplot(x, y, z, rf):
+    global X_AXIS, Y_AXIS, Z_AXIS, RF
+    X_AXIS, Y_AXIS, Z_AXIS, RF = x, y, z, rf
 
     schemas = importlib.import_module(config["schemas"])
     mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
@@ -194,9 +208,9 @@ def scatterplot(x, y, z):
     layout = format_layout()
 
     if Z_AXIS is None:
-        filename = "plots/Scatterplot2D.html"
+        filename = "plots" + os.sep + "Scatterplot2D.html"
     else:
-        filename = "plots/Scatterplot3D.html"
+        filename = "plots"  + os.sep + "Scatterplot3D.html"
 
     plotly.offline.plot({
         "data": DATA,

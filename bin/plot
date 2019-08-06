@@ -44,6 +44,14 @@ def parse_arguments():
         default=False,
         help='Kill MongoDB server process before exiting program (default: False)'
     )
+    global_parser.add_argument(
+        '-rf',
+        '--regression-formula',
+        dest='regression_formula',
+        action='store_true',
+        default=False,
+        help='Output formula for regression line in console (default: False)'
+    )
 
     return global_parser.parse_args()
 
@@ -56,7 +64,7 @@ def main():
 
     start_server()
 
-    scatterplot(args.x, args.y, args.z)
+    scatterplot(args.x, args.y, args.z, args.regression_formula)
 
     if args.kill_server is True:
         end_server()
