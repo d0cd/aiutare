@@ -7,3 +7,5 @@ results
 bin/benching/errors.txt
 categories/sat/instances/*
 categories/sat/instances/*
+
+aiutare.egg-info

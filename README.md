@@ -4,17 +4,17 @@ Automated Analysis, Regression, and Evaluation
 ### Setup
 - See the [Setup wiki page](https://github.com/FedericoAureliano/aiutare/wiki/Setup) for creating the config and other necessary files
 ```
-./setup.py [-h] <absolute path to config.json file>
+python3 setup.py develop --user
 ```
 
 ### Usage
 ```
-./aiutare.py [-h]
+aiutare [-h] config_filepath
 ```
 
 ### Plotting
 ```
-./plot.py [-h] x y
+plot [-h] x y
 ```
 
 ### Database Manipulation

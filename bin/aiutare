@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
-from bin.plotting.scatterplot import scatterplot
+from bin.benching.run import run
+from bin.analyze import analyze
 from bin.mongod_manager import write_config, start_server, end_server
 
 
@@ -10,31 +11,17 @@ def parse_arguments():
 
     # global args
     global_parser.add_argument(
-        '-cfg',
+        metavar='cfg',
         dest='config_filepath',
         type=str,
-        default=None,
-        help='absolute filepath to the user-provided config file (default: uses config provided to setup.py'
+        help='absolute filepath to the user-provided config file'
     )
     global_parser.add_argument(
-        metavar='x',
-        dest='x',
-        type=str,
-        help='Variable for the X axis'
-    )
-    global_parser.add_argument(
-        metavar='y',
-        dest='y',
-        type=str,
-        default=None,
-        help='Variable for the Y axis'
-    )
-    global_parser.add_argument(
-        '-z',
-        dest='z',
-        type=str,
-        default=None,
-        help='Variable for the Z axis (generates a 3D scatterplot if provided)'
+        '-n',
+        dest='num_runs',
+        type=int,
+        default=1,
+        help='Number of times to run all solvers on all problem instances (default: 1)'
     )
     global_parser.add_argument(
         '-ks',
@@ -51,12 +38,13 @@ def parse_arguments():
 def main():
     args = parse_arguments()
 
-    if args.config_filepath is not None:
-        write_config(args.config_filepath)
+    write_config(args.config_filepath)
 
     start_server()
 
-    scatterplot(args.x, args.y, args.z)
+    if args.num_runs > 0:
+        run(args.num_runs)
+    analyze()
 
     if args.kill_server is True:
         end_server()
