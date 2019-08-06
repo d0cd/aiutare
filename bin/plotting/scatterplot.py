@@ -26,7 +26,6 @@ Z_COORDS = []
 
 DATA = []
 
-
 def initialize_coords(names, schemas):
     for i in range(len(names)):
         X_COORDS.append([])
@@ -76,7 +75,7 @@ def quadratic_r_squared(i):
     return r_squared
 
 
-def linear_regress(i, names):
+def linear_regress(i, names, r_squared):
     slope, intercept, r_value, p_value, std_err = stats.linregress(X_COORDS[i], Y_COORDS[i])
     DATA.append(go.Scatter(
         x=[0.0, max(X_COORDS[i])],
@@ -84,12 +83,14 @@ def linear_regress(i, names):
         mode='lines',
         name=(names[i] + " Regression Line Linear")
     ))
-    print("The formula for the line of best fit is:\ny = ("+str(slope)+")x + ("+str(intercept)+")\n")
-    print("y: "+str(Y_AXIS))
-    print("x: "+str(X_AXIS))
+    if RF:
+        print("The formula for the line of best fit is:\ny = ("+str(slope)+")x + ("+str(intercept)+")\n")
+        print("y: "+str(Y_AXIS))
+        print("x: "+str(X_AXIS))
+        print("The r squared value is: "+ str(r_squared))
 
 
-def exp_regress(i, names):
+def exp_regress(i, names, r_squared):
     slope, intercept, r_value, p_value, std_err = stats.linregress(X_COORDS[i], np.log(Y_COORDS[i]))
     x_coords_tmp = np.linspace(0, max(X_COORDS[i]), 200)
     y_coords_tmp = np.exp(slope * x_coords_tmp + intercept)
@@ -99,12 +100,14 @@ def exp_regress(i, names):
         mode='lines',
         name=(names[i] + " Regression Line Exponential")
     ))
-    print("The formula for the line of best fit is:\ny = (" + str(math.exp(intercept)) + ")(" + str(math.exp(slope)) + ")^x\n")
-    print("y: " + str(Y_AXIS))
-    print("x: " + str(X_AXIS))
+    if RF:
+        print("The formula for the line of best fit is:\ny = (" + str(math.exp(intercept)) + ")(" + str(math.exp(slope)) + ")^x\n")
+        print("y: " + str(Y_AXIS))
+        print("x: " + str(X_AXIS))
+        print("The r squared value is: " + str(r_squared))
 
 
-def quadratic_regress(i, names):
+def quadratic_regress(i, names, r_squared):
     z = np.polyfit(X_COORDS[i], Y_COORDS[i], 2)
     f = np.poly1d(z)
     x_coords_tmp = np.linspace(0, max(X_COORDS[i]), 200)
@@ -116,9 +119,11 @@ def quadratic_regress(i, names):
         mode='lines',
         name=(names[i] + " Regression Line Quadratic")
     ))
-    print("The formula for the line of best fit is:\ny = (" + str(z[0]) + ")x^2 + (" + str(z[1])+")x + ("+str(z[2])+")\n")
-    print("y: " + str(Y_AXIS))
-    print("x: " + str(X_AXIS))
+    if RF:
+        print("The formula for the line of best fit is:\ny = (" + str(z[0]) + ")x^2 + (" + str(z[1])+")x + ("+str(z[2])+")\n")
+        print("y: " + str(Y_AXIS))
+        print("x: " + str(X_AXIS))
+        print("The r squared value is: " + str(r_squared))
 
 
 def format_data(nicknames):
@@ -147,13 +152,12 @@ def format_data(nicknames):
                 arr_r_squared[1] = quadratic_r_squared(i)
                 arr_r_squared[2] = stats.linregress(X_COORDS[i], np.log(Y_COORDS[i]))[2]
                 optimal_fit = arr_r_squared.index(max(arr_r_squared))
-
                 if optimal_fit == 0:
-                    linear_regress(i, nicknames)
+                    linear_regress(i, nicknames, max(arr_r_squared))
                 elif optimal_fit == 1:
-                    quadratic_regress(i, nicknames)
+                    quadratic_regress(i, nicknames, max(arr_r_squared))
                 else:
-                    exp_regress(i, nicknames)
+                    exp_regress(i, nicknames, max(arr_r_squared))
 
 
 def format_layout():
@@ -188,9 +192,9 @@ def format_layout():
     return layout
 
 
-def scatterplot(x, y, z):
-    global X_AXIS, Y_AXIS, Z_AXIS
-    X_AXIS, Y_AXIS, Z_AXIS = x, y, z
+def scatterplot(x, y, z, rf):
+    global X_AXIS, Y_AXIS, Z_AXIS, RF
+    X_AXIS, Y_AXIS, Z_AXIS, RF = x, y, z, rf
 
     schemas = importlib.import_module(config["schemas"])
     mongoengine.connect(config["database_name"], replicaset="monitoring_replSet")
