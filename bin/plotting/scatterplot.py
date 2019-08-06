@@ -26,6 +26,7 @@ Z_COORDS = []
 
 DATA = []
 
+
 def initialize_coords(names, schemas):
     for i in range(len(names)):
         X_COORDS.append([])
@@ -84,11 +85,9 @@ def linear_regress(i, names, r_squared):
         name=(names[i] + " Regression Line Linear")
     ))
     if RF:
-        print("-" + names[i] + "-")
-        print("The formula for the line of best fit is:\ny = ("+str(slope)+")x + ("+str(intercept)+")\n")
-        print("y: "+str(Y_AXIS))
-        print("x: "+str(X_AXIS))
-        print("The r squared value is: "+ str(r_squared))
+        print("\n-" + names[i] + "-")
+        print("The formula for the line of best fit is:\ny = ("+str(slope)+")x + ("+str(intercept)+")")
+        print("The r squared value is: " + str(r_squared))
 
 
 def exp_regress(i, names, r_squared):
@@ -102,10 +101,9 @@ def exp_regress(i, names, r_squared):
         name=(names[i] + " Regression Line Exponential")
     ))
     if RF:
-        print("-" + names[i] + "-")
-        print("The formula for the line of best fit is:\ny = (" + str(math.exp(intercept)) + ")(" + str(math.exp(slope)) + ")^x\n")
-        print("y: " + str(Y_AXIS))
-        print("x: " + str(X_AXIS))
+        print("\n-" + names[i] + "-")
+        print("The formula for the line of best fit is:\ny = (" + str(math.exp(intercept)) +
+              ")(" + str(math.exp(slope)) + ")^x")
         print("The r squared value is: " + str(r_squared))
 
 
@@ -122,10 +120,9 @@ def quadratic_regress(i, names, r_squared):
         name=(names[i] + " Regression Line Quadratic")
     ))
     if RF:
-        print("-" + names[i] + "-")
-        print("The formula for the line of best fit is:\ny = (" + str(z[0]) + ")x^2 + (" + str(z[1])+")x + ("+str(z[2])+")\n")
-        print("y: " + str(Y_AXIS))
-        print("x: " + str(X_AXIS))
+        print("\n-" + names[i] + "-")
+        print("The formula for the line of best fit is:\ny = (" + str(z[0]) + ")x^2 + " +
+              "(" + str(z[1])+")x + ("+str(z[2])+")")
         print("The r squared value is: " + str(r_squared))
 
 
