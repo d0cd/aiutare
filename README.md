@@ -20,7 +20,7 @@ plot [-h] x y
 
 ### Solution Verification
 ```
-verify [-h]
+verify
 ```
 
 ### Database Manipulation
