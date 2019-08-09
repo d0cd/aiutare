@@ -2,6 +2,7 @@
 import os
 import sys
 import platform
+import importlib
 from subprocess import call, DEVNULL
 
 
@@ -19,7 +20,7 @@ PIP_DEPENDENCIES = [
 
 
 def pip_install(package):
-    call(["pip", "install", "--user", package], stdout=DEVNULL)
+    call(["pip3", "install", "--user", package], stdout=DEVNULL)
 
 
 def main():
@@ -39,11 +40,13 @@ def main():
             os.chmod(os.path.join(root, file), 0o0777)
 
     print("Installing pip dependencies")
-    call(["pip", "install", "--upgrade", "pip"], stdout=DEVNULL)
+    call(["pip3", "install", "--upgrade", "pip"], stdout=DEVNULL)
     for dependency in PIP_DEPENDENCIES:
         pip_install(dependency)
 
     print("Calling setuptools.setup function")
+    import site
+    importlib.reload(site)
     import setuptools
     with open("README.md", "r") as fh:
         long_description = fh.read()
@@ -55,7 +58,6 @@ def main():
         author_email="lukasocallahan@gmail.com, fmora@cs.toronto.edu",
         description="A benchmarking framework for SAT, SMT, and equivalence checking programs.",
         long_description=long_description,
-        long_description_content_type="text/markdown",
         url="https://github.com/FedericoAureliano/aiutare",
         scripts=[
             'bin/aiutare',
