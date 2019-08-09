@@ -2,11 +2,11 @@
 import os
 import sys
 import platform
-import setuptools
 from subprocess import call, DEVNULL
 
 
 PIP_DEPENDENCIES = [
+        'setuptools',
         'pymongo',
         'mongoengine',
         'progressbar2',
@@ -19,7 +19,7 @@ PIP_DEPENDENCIES = [
 
 
 def pip_install(package):
-    call([sys.executable, "-m", "pip", "install", "--user", package], stdout=DEVNULL)
+    call(["pip", "install", "--user", package], stdout=DEVNULL)
 
 
 def main():
@@ -39,11 +39,12 @@ def main():
             os.chmod(os.path.join(root, file), 0o0777)
 
     print("Installing pip dependencies")
-    call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"], stdout=DEVNULL)
+    call(["pip", "install", "--upgrade", "pip"], stdout=DEVNULL)
     for dependency in PIP_DEPENDENCIES:
         pip_install(dependency)
 
     print("Calling setuptools.setup function")
+    import setuptools
     with open("README.md", "r") as fh:
         long_description = fh.read()
 
