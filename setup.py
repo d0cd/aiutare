@@ -40,7 +40,7 @@ def main():
             os.chmod(os.path.join(root, file), 0o0777)
 
     print("Installing pip dependencies")
-    call(["pip3", "install", "--upgrade", "pip"], stdout=DEVNULL)
+    call(["pip3", "install", "--upgrade", "pip", "--user"], stdout=DEVNULL)
     for dependency in PIP_DEPENDENCIES:
         pip_install(dependency)
 
