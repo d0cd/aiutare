@@ -61,6 +61,6 @@ bin/install_scripts/cvc4.sh
 bin/install_scripts/z3.sh
 
 # Install python packages
-pip install matplotlib
-pip install numpy
-pip install -U ray
+pip3 install matplotlib
+pip3 install numpy
+pip3 install -U ray
