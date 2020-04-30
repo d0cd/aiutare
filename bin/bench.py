@@ -6,7 +6,6 @@ import subprocess
 import signal
 import datetime
 import time
-import concurrent.futures
 
 
 from collections import namedtuple
@@ -31,8 +30,10 @@ ERROR_RESULT   = 'error'
 SOLVERS = {
     #timeout is a little more than TIMEOUT
     # "Z3seq"   : "tools/z3 smt.string_solver=seq -T:33",
-    "Z3str3"  : "tools/z3 smt.str.multiset_check=false  smt.str.count_abstraction=true smt.string_solver=z3str3 -T:33",
+    #"Z3str3"  : "tools/z3 smt.str.multiset_check=false  smt.str.count_abstraction=true smt.string_solver=z3str3 -T:33",
     # "CVC4"    : "tools/cvc4 --lang smt --strings-exp --tlimit=33000 -q",
+    "CVC4base"    : "tools/cvc4 --lang smt",
+    "Z3base"      : "tools/z3",
 }
 
 def output2result(problem, output):
