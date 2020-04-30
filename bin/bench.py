@@ -6,6 +6,7 @@ import subprocess
 import signal
 import datetime
 import time
+import ray
 
 
 from collections import namedtuple
@@ -13,7 +14,7 @@ from operator import attrgetter
 
 # arguments
 TIMEOUT     = 30.0
-PROBLEMS    = "instances/**/*.smt2*"
+PROBLEMS    = "instances/**/*.smt*"
 RESULTS_DIR = "results"
 
 # data
@@ -32,8 +33,8 @@ SOLVERS = {
     # "Z3seq"   : "tools/z3 smt.string_solver=seq -T:33",
     #"Z3str3"  : "tools/z3 smt.str.multiset_check=false  smt.str.count_abstraction=true smt.string_solver=z3str3 -T:33",
     # "CVC4"    : "tools/cvc4 --lang smt --strings-exp --tlimit=33000 -q",
-    "CVC4base"    : "tools/cvc4 --lang smt",
-    "Z3base"      : "tools/z3",
+    "CVC4base"    : "tools/cvc4 --lang smt --incremental",
+    #"Z3base"      : "tools/z3",
 }
 
 def output2result(problem, output):
@@ -49,7 +50,7 @@ def output2result(problem, output):
     # print(problem, ': Couldn\'t parse output', file=sys.stderr)
     return ERROR_RESULT
 
-
+@ray.remote
 def run_problem(solver, invocation, problem):
     # pass the problem to the command
     command = "%s %s" %(invocation, problem)
@@ -91,7 +92,6 @@ def run_problem(solver, invocation, problem):
     )
     return result
 
-@ray.remote
 def run_solver(args):
     solver   = args[0]
     command  = args[1]
@@ -100,8 +100,19 @@ def run_solver(args):
 
     with open(filename, 'w+', buffering=1) as fp:
         fp.write(CSV_HEADER)
-        for problem in problems:
-            result = run_problem(solver, command, problem)
+
+        # Parallelize solver queries
+        ray_objs = [run_problem.remote(solver, command, problem) for problem in problems]
+        finished_ids, remaining_ids = ray.wait(ray_objs)
+        while (len(remaining_ids) != 0):
+            time.sleep(10)
+            print("Waiting on %s jobs to finish..." % len(remaining_ids))
+            ready_ids, remaining_ids = ray.wait(remaining_ids)
+            finished_ids += ready_ids
+
+        # Write output
+        for finished in finished_ids:
+            result = ray.get(finished)
             fp.write("%s,%s,%s\n" % (result.problem, result.result, result.elapsed))
 
 
@@ -120,19 +131,17 @@ def main():
     
     arg_list = [[solver, command, problems] for solver, command in SOLVERS.items()]
     try:
-        ray_objs = [run_solver.remote(args) for args in arg_list]
-        ready_ids, remaining_ids = ray.wait(ray_objs)
-        while (len(remaining_ids) != 0):
-            time.sleep(10)
-            print("Waiting on %s jobs to finish..." % len(remaining_ids))
-            ready_ids, remaining_ids = ray.wait(remaining_ids)
+        for args in arg_list:
+            run_solver(args)
     except KeyboardInterrupt:
         print('Interrupted!')
         try:
+            ray.shutdown()
             sys.exit(0)
         except SystemExit:
             os._exit(0)
 
 
 if __name__ == '__main__':
+    ray.init(include_webui=True)
     main()
