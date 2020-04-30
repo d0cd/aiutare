@@ -8,6 +8,7 @@ import datetime
 import time
 import concurrent.futures
 
+
 from collections import namedtuple
 from operator import attrgetter
 
@@ -89,7 +90,7 @@ def run_problem(solver, invocation, problem):
     )
     return result
 
-
+@ray.remote
 def run_solver(args):
     solver   = args[0]
     command  = args[1]
@@ -114,12 +115,16 @@ def signal_handler(signal, frame):
 def main():
     signal.signal(signal.SIGTERM, signal_handler)
     problems = glob.glob(PROBLEMS, recursive=True)
-    print(len(problems))
+    print("Found %s problems to run..." % len(problems))
     
-    args = [[solver, command, problems] for solver, command in SOLVERS.items()]
+    arg_list = [[solver, command, problems] for solver, command in SOLVERS.items()]
     try:
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            executor.map(run_solver, args)
+        ray_objs = [run_solver.remote(args) for args in arg_list]
+        ready_ids, remaining_ids = ray.wait(ray_objs)
+        while (len(remaining_ids) != 0):
+            time.sleep(10)
+            print("Waiting on %s jobs to finish..." % len(remaining_ids))
+            ready_ids, remaining_ids = ray.wait(remaining_ids)
     except KeyboardInterrupt:
         print('Interrupted!')
         try:
