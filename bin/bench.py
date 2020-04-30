@@ -33,8 +33,8 @@ SOLVERS = {
     # "Z3seq"   : "tools/z3 smt.string_solver=seq -T:33",
     #"Z3str3"  : "tools/z3 smt.str.multiset_check=false  smt.str.count_abstraction=true smt.string_solver=z3str3 -T:33",
     # "CVC4"    : "tools/cvc4 --lang smt --strings-exp --tlimit=33000 -q",
-    "CVC4base"    : "tools/cvc4 --lang smt --incremental",
-    #"Z3base"      : "tools/z3",
+    #"CVC4base"    : "tools/cvc4 --lang smt --incremental",
+    "Z3base"      : "tools/z3",
 }
 
 def output2result(problem, output):
@@ -103,16 +103,10 @@ def run_solver(args):
 
         # Parallelize solver queries
         ray_objs = [run_problem.remote(solver, command, problem) for problem in problems]
-        finished_ids, remaining_ids = ray.wait(ray_objs)
-        while (len(remaining_ids) != 0):
-            time.sleep(10)
-            print("Waiting on %s jobs to finish..." % len(remaining_ids))
-            ready_ids, remaining_ids = ray.wait(remaining_ids)
-            finished_ids += ready_ids
-
+        finished_ids = ray.get(ray_objs)
+        
         # Write output
-        for finished in finished_ids:
-            result = ray.get(finished)
+        for result in finished_ids:
             fp.write("%s,%s,%s\n" % (result.problem, result.result, result.elapsed))
 
 
@@ -143,5 +137,5 @@ def main():
 
 
 if __name__ == '__main__':
-    ray.init(include_webui=True)
+    ray.init(num_cpus=4, include_webui=True)
     main()
